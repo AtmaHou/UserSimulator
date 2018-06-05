@@ -12,6 +12,11 @@ start_dia_acts = {
     'request':['moviename', 'starttime', 'theater', 'city', 'state', 'date', 'genre', 'ticket', 'numberofpeople']
 }
 
+user_request_slots = sys_inform_slots
+user_inform_slots = sys_request_slots
+
+
+
 ################################################################################
 # Dialog status
 ################################################################################
@@ -73,14 +78,26 @@ feasible_actions = [
     ############################################################################
     {'diaact':"deny", 'inform_slots':{}, 'request_slots':{}},
 ]
+
+user_feasible_action = feasible_actions[:]  # copy another version
+
 ############################################################################
 #   Adding the inform actions
 ############################################################################
 for slot in sys_inform_slots:
     feasible_actions.append({'diaact':'inform', 'inform_slots':{slot:"PLACEHOLDER"}, 'request_slots':{}})
+for slot in user_inform_slots:
+    user_feasible_action.append({'diaact':'inform', 'inform_slots':{slot:"PLACEHOLDER"}, 'request_slots':{}})
 
 ############################################################################
 #   Adding the request actions
 ############################################################################
 for slot in sys_request_slots:
     feasible_actions.append({'diaact':'request', 'inform_slots':{}, 'request_slots': {slot: "UNK"}})
+for slot in user_request_slots:
+    user_feasible_action.append({'diaact':'request', 'inform_slots':{}, 'request_slots': {slot: "UNK"}})
+
+############################################################################
+#   File path
+############################################################################
+TRAIN_LOG_PATH = './warm_up_log.log'

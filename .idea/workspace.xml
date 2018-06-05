@@ -2,10 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="3bfa9a2e-dbc6-449b-9d98-0f5da58a24f7" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/src/data_transformer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/deep_dialog/nlg/nlg.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/deep_dialog/nlg/nlg.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/run.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/run.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/deep_dialog/dialog_config.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/deep_dialog/dialog_config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/deep_dialog/usersims/user_action_predictor.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/deep_dialog/usersims/user_action_predictor.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -25,124 +24,105 @@
     <SUITE FILE_PATH="coverage/TC_Bot$RL_with_NLU___NLG___Output.coverage" NAME="RL with NLU &amp; NLG &amp; Output Coverage Results" MODIFIED="1525934232516" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.58742005">
-      <split-first>
-        <leaf SIDE_TABS_SIZE_LIMIT_KEY="375">
-          <file leaf-file-name="dialog_config.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/src/deep_dialog/dialog_config.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="504">
-                  <caret line="47" column="6" selection-start-line="47" selection-start-column="6" selection-end-line="47" selection-end-column="6" />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="agent_dqn.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/src/deep_dialog/agents/agent_dqn.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="111">
-                  <caret line="73" column="18" selection-start-line="73" selection-start-column="18" selection-end-line="73" selection-end-column="18" />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="dialog_manager.py" pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/src/deep_dialog/dialog_system/dialog_manager.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="440">
-                  <caret line="60" column="78" lean-forward="true" selection-start-line="60" selection-start-column="78" selection-end-line="60" selection-end-column="78" />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="state_tracker.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/src/deep_dialog/dialog_system/state_tracker.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="-570">
-                  <caret line="131" column="56" lean-forward="true" selection-start-line="131" selection-start-column="56" selection-end-line="131" selection-end-column="56" />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="dqn.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/src/deep_dialog/qlearning/dqn.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="41">
-                  <caret line="16" column="6" lean-forward="true" selection-start-line="16" selection-start-column="6" selection-end-line="16" selection-end-column="6" />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="nlg_tool.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/src/deep_dialog/pytoch_nlg/nlg_tool.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="440">
-                  <caret line="22" lean-forward="true" selection-start-line="22" selection-end-line="22" />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="user_action_predictor.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/src/deep_dialog/usersims/user_action_predictor.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="404">
-                  <caret line="29" column="12" lean-forward="true" selection-start-line="29" selection-start-column="12" selection-end-line="29" selection-end-column="12" />
-                  <folding>
-                    <element signature="e#332#370#0" expanded="true" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="run.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/src/run.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="300">
-                  <caret line="92" column="4" lean-forward="true" selection-start-line="92" selection-start-column="4" selection-end-line="92" selection-end-column="4" />
-                  <folding>
-                    <element signature="e#1977#2008#0" expanded="true" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-        </leaf>
-      </split-first>
-      <split-second>
-        <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file leaf-file-name="usersim_rule.py" pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/src/deep_dialog/usersims/usersim_rule.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="391">
-                  <caret line="57" column="53" lean-forward="true" selection-start-line="57" selection-start-column="53" selection-end-line="57" selection-end-column="53" />
-                  <folding>
-                    <element signature="e#315#349#0" expanded="true" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="dia_act_nl_pairs.v6.json" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/src/deep_dialog/data/dia_act_nl_pairs.v6.json">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="400">
-                  <caret line="3516" column="1" selection-start-line="3516" selection-start-column="1" selection-end-line="3516" selection-end-column="1" />
-                  <folding>
-                    <element signature="e#32#42387#0" />
-                    <element signature="e#42680#95282#0" />
-                    <element signature="e#95299#95673#0" />
-                    <element signature="e#95699#96982#0" />
-                    <element signature="e#97001#97191#0" />
-                    <element signature="e#97217#98244#0" />
-                    <element signature="e#98268#98425#0" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-        </leaf>
-      </split-second>
-    </splitter>
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="375">
+      <file leaf-file-name="dia_act_nl_pairs.v6.json" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/deep_dialog/data/dia_act_nl_pairs.v6.json">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="646">
+              <caret line="1156" column="9" lean-forward="true" selection-start-line="1156" selection-start-column="9" selection-end-line="1156" selection-end-column="9" />
+              <folding>
+                <element signature="e#95299#95673#0" />
+                <element signature="e#95699#96982#0" />
+                <element signature="e#97001#97191#0" />
+                <element signature="e#97217#98244#0" />
+                <element signature="e#98268#98425#0" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="agent_dqn.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/deep_dialog/agents/agent_dqn.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="600">
+              <caret line="46" column="61" lean-forward="true" selection-start-line="46" selection-start-column="61" selection-end-line="46" selection-end-column="61" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="dialog_manager.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/deep_dialog/dialog_system/dialog_manager.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="540">
+              <caret line="62" column="57" lean-forward="true" selection-start-line="62" selection-start-column="57" selection-end-line="62" selection-end-column="57" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="state_tracker.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/deep_dialog/dialog_system/state_tracker.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1437">
+              <caret line="131" column="56" lean-forward="true" selection-start-line="131" selection-start-column="56" selection-end-line="131" selection-end-column="56" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="dqn.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/deep_dialog/qlearning/dqn.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="41">
+              <caret line="16" column="6" lean-forward="true" selection-start-line="16" selection-start-column="6" selection-end-line="16" selection-end-column="6" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="nlg_tool.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/deep_dialog/pytoch_nlg/nlg_tool.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="440">
+              <caret line="22" lean-forward="true" selection-start-line="22" selection-end-line="22" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="user_action_predictor.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/deep_dialog/usersims/user_action_predictor.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="285">
+              <caret line="51" column="27" lean-forward="true" selection-start-line="51" selection-start-column="27" selection-end-line="51" selection-end-column="27" />
+              <folding>
+                <element signature="e#331#343#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="action_classifier.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/deep_dialog/usersims/action_classifier.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="798">
+              <caret line="42" column="52" lean-forward="true" selection-start-line="42" selection-start-column="52" selection-end-line="42" selection-end-column="52" />
+              <folding>
+                <element signature="e#17#29#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="run.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/run.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="300">
+              <caret line="92" column="4" lean-forward="true" selection-start-line="92" selection-start-column="4" selection-end-line="92" selection-end-column="4" />
+              <folding>
+                <element signature="e#1977#2008#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -166,6 +146,8 @@
       <find>state['history_slots']</find>
       <find>usr&quot;:</find>
       <find>state_dim</find>
+      <find>self.state</find>
+      <find>feasible_actions</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -177,8 +159,6 @@
         <option value="$PROJECT_DIR$/README.md" />
         <option value="$PROJECT_DIR$/src/pickle_test.py" />
         <option value="$PROJECT_DIR$/src/deep_dialog/usersims/usersim.py" />
-        <option value="$PROJECT_DIR$/src/deep_dialog/agents/agent_dqn.py" />
-        <option value="$PROJECT_DIR$/src/deep_dialog/dialog_config.py" />
         <option value="$PROJECT_DIR$/src/run.py" />
         <option value="$PROJECT_DIR$/src/deep_dialog/nlg/nlg.py" />
         <option value="$PROJECT_DIR$/src/deep_dialog/nlu/nlu.py" />
@@ -190,8 +170,11 @@
         <option value="$PROJECT_DIR$/.gitignore" />
         <option value="$PROJECT_DIR$/src/deep_dialog/pytoch_nlg/pytorch_nlg.py" />
         <option value="$PROJECT_DIR$/src/deep_dialog/pytoch_nlg/nlg_tool.py" />
-        <option value="$PROJECT_DIR$/src/deep_dialog/usersims/user_action_predictor.py" />
         <option value="$PROJECT_DIR$/src/deep_dialog/usersims/usersim_rule.py" />
+        <option value="$PROJECT_DIR$/src/deep_dialog/agents/agent_dqn.py" />
+        <option value="$PROJECT_DIR$/src/deep_dialog/usersims/action_classifier.py" />
+        <option value="$PROJECT_DIR$/src/deep_dialog/dialog_config.py" />
+        <option value="$PROJECT_DIR$/src/deep_dialog/usersims/user_action_predictor.py" />
       </list>
     </option>
   </component>
@@ -201,11 +184,11 @@
     <detection-done>true</detection-done>
     <sorting>DEFINITION_ORDER</sorting>
   </component>
-  <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="1912" />
-    <option name="y" value="-8" />
-    <option name="width" value="1936" />
-    <option name="height" value="1056" />
+  <component name="ProjectFrameBounds" extendedState="7">
+    <option name="x" value="471" />
+    <option name="y" value="-9" />
+    <option name="width" value="1938" />
+    <option name="height" value="1048" />
   </component>
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="1" id="Add" />
@@ -274,6 +257,13 @@
               <item name="TC-Bot" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
               <item name="deep_dialog" type="462c0819:PsiDirectoryNode" />
+              <item name="data" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="TC-Bot" type="b2602c69:ProjectViewProjectNode" />
+              <item name="TC-Bot" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="deep_dialog" type="462c0819:PsiDirectoryNode" />
               <item name="qlearning" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -292,7 +282,7 @@
   <component name="PropertiesComponent">
     <property name="SearchEverywhereHistoryKey" value="interpreter&#9;null&#9;null&#10;interpre&#9;null&#9;null&#10;statis&#9;ACTION&#9;ActivateStatisticToolWindow&#10;plugin&#9;ACTION&#9;WelcomeScreen.Plugins" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../../../Homework/PHD1st/ComputationalSemantic" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="PyConsoleOptionsProvider">
@@ -413,18 +403,18 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="1912" y="-8" width="1936" height="1056" extended-state="6" />
+    <frame x="-7" y="-7" width="1550" height="838" extended-state="7" />
     <editor active="true" />
     <layout>
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
       <window_info anchor="bottom" id="Database Changes" order="8" show_stripe_button="false" />
-      <window_info anchor="bottom" id="File Transfer" order="9" visible="true" weight="0.33482644" />
+      <window_info anchor="bottom" id="File Transfer" order="9" weight="0.33482644" />
       <window_info anchor="bottom" id="Run" order="2" weight="0.2094065" />
       <window_info anchor="bottom" id="Version Control" order="7" />
-      <window_info anchor="bottom" id="Python Console" order="7" weight="0.14893617" />
+      <window_info anchor="bottom" id="Python Console" order="7" weight="0.31905466" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.2530795" />
-      <window_info content_ui="combo" id="Project" order="0" weight="0.20735608" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.18431635" />
       <window_info anchor="bottom" id="Statistic" order="10" weight="0.3293944" />
       <window_info anchor="bottom" id="Docker" order="8" show_stripe_button="false" />
       <window_info anchor="right" id="Database" order="3" />
@@ -454,22 +444,6 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/deep_dialog/data/dia_act_nl_pairs.v6.json">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="26619">
-          <caret line="1401" column="11" lean-forward="true" selection-start-line="1401" selection-start-column="11" selection-end-line="1401" selection-end-column="11" />
-          <folding>
-            <element signature="e#32#42387#0" />
-            <element signature="e#42680#95282#0" />
-            <element signature="e#95299#95673#0" />
-            <element signature="e#95699#96982#0" />
-            <element signature="e#97001#97191#0" />
-            <element signature="e#97217#98244#0" />
-            <element signature="e#98268#98425#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/README.md">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="3192">
@@ -709,22 +683,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/deep_dialog/data/dia_act_nl_pairs.v6.json">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="400">
-          <caret line="3516" column="1" selection-start-line="3516" selection-start-column="1" selection-end-line="3516" selection-end-column="1" />
-          <folding>
-            <element signature="e#32#42387#0" />
-            <element signature="e#42680#95282#0" />
-            <element signature="e#95299#95673#0" />
-            <element signature="e#95699#96982#0" />
-            <element signature="e#97001#97191#0" />
-            <element signature="e#97217#98244#0" />
-            <element signature="e#98268#98425#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/.gitignore">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="420">
@@ -780,13 +738,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/deep_dialog/dialog_config.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="504">
-          <caret line="47" column="6" selection-start-line="47" selection-start-column="6" selection-end-line="47" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/deep_dialog/qlearning/dqn.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="41">
@@ -794,44 +745,75 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/deep_dialog/agents/agent_dqn.py">
+    <entry file="file://$PROJECT_DIR$/src/deep_dialog/dialog_system/dialog_manager.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="111">
-          <caret line="73" column="18" selection-start-line="73" selection-start-column="18" selection-end-line="73" selection-end-column="18" />
+        <state relative-caret-position="540">
+          <caret line="62" column="57" lean-forward="true" selection-start-line="62" selection-start-column="57" selection-end-line="62" selection-end-column="57" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/deep_dialog/dialog_system/state_tracker.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-570">
+        <state relative-caret-position="1437">
           <caret line="131" column="56" lean-forward="true" selection-start-line="131" selection-start-column="56" selection-end-line="131" selection-end-column="56" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/deep_dialog/usersims/user_action_predictor.py">
+    <entry file="file://$PROJECT_DIR$/src/deep_dialog/agents/agent_dqn.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="404">
-          <caret line="29" column="12" lean-forward="true" selection-start-line="29" selection-start-column="12" selection-end-line="29" selection-end-column="12" />
-          <folding>
-            <element signature="e#332#370#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="600">
+          <caret line="46" column="61" lean-forward="true" selection-start-line="46" selection-start-column="61" selection-end-line="46" selection-end-column="61" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/deep_dialog/usersims/usersim_rule.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="391">
-          <caret line="57" column="53" lean-forward="true" selection-start-line="57" selection-start-column="53" selection-end-line="57" selection-end-column="53" />
+        <state relative-caret-position="427">
+          <caret line="182" column="35" lean-forward="true" selection-start-line="182" selection-start-column="35" selection-end-line="182" selection-end-column="35" />
           <folding>
             <element signature="e#315#349#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/deep_dialog/dialog_system/dialog_manager.py">
+    <entry file="file://$PROJECT_DIR$/src/deep_dialog/dialog_config.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="440">
-          <caret line="60" column="78" lean-forward="true" selection-start-line="60" selection-start-column="78" selection-end-line="60" selection-end-column="78" />
+        <state relative-caret-position="771">
+          <caret line="102" column="36" lean-forward="true" selection-start-line="102" selection-start-column="36" selection-end-line="102" selection-end-column="36" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/deep_dialog/usersims/action_classifier.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="798">
+          <caret line="42" column="52" lean-forward="true" selection-start-line="42" selection-start-column="52" selection-end-line="42" selection-end-column="52" />
+          <folding>
+            <element signature="e#17#29#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/deep_dialog/usersims/user_action_predictor.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="285">
+          <caret line="51" column="27" lean-forward="true" selection-start-line="51" selection-start-column="27" selection-end-line="51" selection-end-column="27" />
+          <folding>
+            <element signature="e#331#343#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/deep_dialog/data/dia_act_nl_pairs.v6.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="646">
+          <caret line="1156" column="9" lean-forward="true" selection-start-line="1156" selection-start-column="9" selection-end-line="1156" selection-end-column="9" />
+          <folding>
+            <element signature="e#95299#95673#0" />
+            <element signature="e#95699#96982#0" />
+            <element signature="e#97001#97191#0" />
+            <element signature="e#97217#98244#0" />
+            <element signature="e#98268#98425#0" />
+          </folding>
         </state>
       </provider>
     </entry>
