@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="3a1686ee-f2a6-44d4-9ef5-02557f95b078" name="IRGPU" url="http://222.32.72.69">
+        <fileTransfer host="222.32.72.69" port="55555" rootFolder="/users4/ythou" accessType="SFTP">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" />
+          </advancedOptions>
+          <option name="port" value="55555" />
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
