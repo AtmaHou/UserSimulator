@@ -48,7 +48,6 @@ Next, it triggers the simulator to run for the specified number of episodes.
 """
 
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
