@@ -16,7 +16,6 @@ user_request_slots = sys_inform_slots
 user_inform_slots = sys_request_slots
 
 
-
 ################################################################################
 # Dialog status
 ################################################################################
@@ -100,4 +99,8 @@ for slot in user_request_slots:
 ############################################################################
 #   File path
 ############################################################################
-TRAIN_LOG_PATH = './warm_up_log.log'
+LOG_DIR = 'E:/Projects/Research/TaskOrientedDialogue/data/TC-bot/log/'
+DATA_DIR = 'E:/Projects/Research/TaskOrientedDialogue/data/TC-bot/data/'
+
+TRAIN_LOG_PATH = LOG_DIR + 'no_nlg_no_nlu.log'
+EXTRACTED_LOG_DATA_PATH = LOG_DIR + 'extracted_no_nlg_no_nlu.json'

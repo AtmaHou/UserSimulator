@@ -32,9 +32,10 @@ import numpy as np
 from deep_dialog import dialog_config
 
 from .usersim_rule import RuleSimulator
-from .action_classifier import ClassifyLayer
+from .classifier import ClassifyLayer
 
-TRAIN_LOG_PATH = dialog_config.TRAIN_LOG_PATH
+LOG_PATH = dialog_config.EXTRACTED_LOG_DATA_PATH
+
 
 class SuperviseUserSimulator(RuleSimulator):
     def __init__(self, movie_dict=None, act_set=None, slot_set=None, start_set=None, params=None, use_cuda=False):
@@ -100,9 +101,11 @@ class SuperviseUserSimulator(RuleSimulator):
         ))
         return state_representation
 
-    def train_action_classifier(self):
-        with open(TRAIN_LOG_PATH) as reader:
-            all_log = reader.read()
+    def train_and_test_action_classifier(self, LOG_PATH):
+        with open(LOG_PATH) as reader:
+            log_data = json.loads(reader)
+        all_sample = log_data['warm_start_data'] + log_data['train_data']
+
 
     def fill_slot_value(self, response):
         raise NotImplementedError

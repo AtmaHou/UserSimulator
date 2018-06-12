@@ -3,7 +3,9 @@
   <component name="ChangeListManager">
     <list default="true" id="3bfa9a2e-dbc6-449b-9d98-0f5da58a24f7" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/run.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/run.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/deep_dialog/dialog_config.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/deep_dialog/dialog_config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/deep_dialog/usersims/action_classifier.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/deep_dialog/usersims/classifier.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/deep_dialog/usersims/user_action_predictor.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/deep_dialog/usersims/user_action_predictor.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -16,8 +18,10 @@
     <SUITE FILE_PATH="coverage/TC_Bot$E2E_NLU_G.coverage" NAME="E2E NLU/G Coverage Results" MODIFIED="1505827586063" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/TC_Bot$RL_with_NLU___NLG.coverage" NAME="RL with NLU &amp; NLG Coverage Results" MODIFIED="1528274193772" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/TC_Bot$Test_RL_Agent.coverage" NAME="Test RL Agent Coverage Results" MODIFIED="1505827472138" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+    <SUITE FILE_PATH="coverage/TC_Bot$Prepare_User_Sim_Data.coverage" NAME="Prepare User Sim Data Coverage Results" MODIFIED="1528701876957" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/deep_dialog/usersims" />
     <SUITE FILE_PATH="coverage/TC_Bot$CmdNLAgent.coverage" NAME="CmdNLAgent Coverage Results" MODIFIED="1505826917149" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/TC_Bot$Rule_Agent.coverage" NAME="Rule Agent Coverage Results" MODIFIED="1524633173330" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+    <SUITE FILE_PATH="coverage/TC_Bot$RL_with_no_NLU___no_NLG.coverage" NAME="RL with no NLU &amp; no NLG Coverage Results" MODIFIED="1528339214794" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/TC_Bot$convert_data.coverage" NAME="convert data Coverage Results" MODIFIED="1526028619247" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/TC_Bot$RuleAngent.coverage" NAME="RuleAngent Coverage Results" MODIFIED="1505824776438" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/TC_Bot$RL_with_NLU___NLG___Output.coverage" NAME="RL with NLU &amp; NLG &amp; Output Coverage Results" MODIFIED="1525934232516" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
@@ -27,8 +31,8 @@
       <file leaf-file-name="dia_act_nl_pairs.v6.json" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/deep_dialog/data/dia_act_nl_pairs.v6.json">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="443">
-              <caret line="1169" column="9" lean-forward="true" selection-start-line="1169" selection-start-column="9" selection-end-line="1169" selection-end-column="9" />
+            <state relative-caret-position="23380">
+              <caret line="1169" column="9" selection-start-line="1169" selection-start-column="9" selection-end-line="1169" selection-end-column="9" />
               <folding>
                 <element signature="e#95299#95673#0" />
                 <element signature="e#95699#96982#0" />
@@ -49,15 +53,6 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="dialog_manager.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/deep_dialog/dialog_system/dialog_manager.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1200">
-              <caret line="62" column="57" selection-start-line="62" selection-start-column="57" selection-end-line="62" selection-end-column="57" />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="state_tracker.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/deep_dialog/dialog_system/state_tracker.py">
           <provider selected="true" editor-type-id="text-editor">
@@ -67,38 +62,35 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="dqn.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/deep_dialog/qlearning/dqn.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="320">
-              <caret line="16" column="6" selection-start-line="16" selection-start-column="6" selection-end-line="16" selection-end-column="6" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="nlg_tool.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/deep_dialog/pytoch_nlg/nlg_tool.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="440">
-              <caret line="22" selection-start-line="22" selection-end-line="22" />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="user_action_predictor.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/deep_dialog/usersims/user_action_predictor.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="600">
-              <caret line="51" column="27" selection-start-line="51" selection-start-column="27" selection-end-line="51" selection-end-column="27" />
+            <state relative-caret-position="69">
+              <caret line="75" column="22" selection-start-line="75" selection-start-column="22" selection-end-line="75" selection-end-column="22" />
+              <folding>
+                <element signature="e#332#344#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="action_classifier.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/deep_dialog/usersims/action_classifier.py">
+      <file leaf-file-name="usersim_rule.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/deep_dialog/usersims/usersim_rule.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="540">
-              <caret line="42" column="52" selection-start-line="42" selection-start-column="52" selection-end-line="42" selection-end-column="52" />
+            <state relative-caret-position="3640">
+              <caret line="182" column="35" selection-start-line="182" selection-start-column="35" selection-end-line="182" selection-end-column="35" />
+              <folding>
+                <element signature="e#315#349#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="classifier.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/deep_dialog/usersims/classifier.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="548">
+              <caret line="136" lean-forward="true" selection-start-line="136" selection-end-line="136" />
               <folding>
                 <element signature="e#17#29#0" expanded="true" />
               </folding>
@@ -106,14 +98,32 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="run.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="prepare_data.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/deep_dialog/usersims/prepare_data.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="640">
+              <caret line="165" column="7" selection-start-line="165" selection-start-column="7" selection-end-line="165" selection-end-column="7" />
+              <folding>
+                <element signature="e#16#63#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="dialog_config.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/deep_dialog/dialog_config.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="460">
+              <caret line="23" column="18" selection-start-line="23" selection-start-column="18" selection-end-line="23" selection-end-column="18" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="run.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/run.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="600">
-              <caret line="48" lean-forward="true" selection-start-line="48" selection-end-line="48" />
-              <folding>
-                <element signature="e#1977#2008#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="252">
+              <caret line="37" column="39" selection-start-line="37" selection-start-column="39" selection-end-line="37" selection-end-column="39" />
             </state>
           </provider>
         </entry>
@@ -144,6 +154,8 @@
       <find>state_dim</find>
       <find>self.state</find>
       <find>feasible_actions</find>
+      <find>print</find>
+      <find>log</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -167,10 +179,12 @@
         <option value="$PROJECT_DIR$/src/deep_dialog/pytoch_nlg/nlg_tool.py" />
         <option value="$PROJECT_DIR$/src/deep_dialog/usersims/usersim_rule.py" />
         <option value="$PROJECT_DIR$/src/deep_dialog/agents/agent_dqn.py" />
-        <option value="$PROJECT_DIR$/src/deep_dialog/usersims/action_classifier.py" />
-        <option value="$PROJECT_DIR$/src/deep_dialog/dialog_config.py" />
-        <option value="$PROJECT_DIR$/src/deep_dialog/usersims/user_action_predictor.py" />
         <option value="$PROJECT_DIR$/src/run.py" />
+        <option value="$PROJECT_DIR$/src/deep_dialog/usersims/prepare_data.py" />
+        <option value="$PROJECT_DIR$/src/deep_dialog/usersims/user_action_predictor.py" />
+        <option value="$PROJECT_DIR$/src/deep_dialog/dialog_config.py" />
+        <option value="$PROJECT_DIR$/src/deep_dialog/usersims/action_classifier.py" />
+        <option value="$PROJECT_DIR$/src/deep_dialog/usersims/classifier.py" />
       </list>
     </option>
   </component>
@@ -181,10 +195,9 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="471" />
-    <option name="y" value="-9" />
-    <option name="width" value="1938" />
-    <option name="height" value="1048" />
+    <option name="x" value="-8" />
+    <option name="width" value="1937" />
+    <option name="height" value="1038" />
   </component>
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="1" id="Add" />
@@ -246,27 +259,6 @@
               <item name="TC-Bot" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
               <item name="deep_dialog" type="462c0819:PsiDirectoryNode" />
-              <item name="agents" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="TC-Bot" type="b2602c69:ProjectViewProjectNode" />
-              <item name="TC-Bot" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="deep_dialog" type="462c0819:PsiDirectoryNode" />
-              <item name="data" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="TC-Bot" type="b2602c69:ProjectViewProjectNode" />
-              <item name="TC-Bot" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="deep_dialog" type="462c0819:PsiDirectoryNode" />
-              <item name="qlearning" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="TC-Bot" type="b2602c69:ProjectViewProjectNode" />
-              <item name="TC-Bot" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="deep_dialog" type="462c0819:PsiDirectoryNode" />
               <item name="usersims" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
@@ -278,7 +270,7 @@
   <component name="PropertiesComponent">
     <property name="SearchEverywhereHistoryKey" value="interpreter&#9;null&#9;null&#10;interpre&#9;null&#9;null&#10;statis&#9;ACTION&#9;ActivateStatisticToolWindow&#10;plugin&#9;ACTION&#9;WelcomeScreen.Plugins" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../../../Homework/PHD1st/ComputationalSemantic" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/src/deep_dialog/usersims/prepare_data.py" />
     <property name="settings.editor.selected.configurable" value="PyConsoleConfigurable.Python Console" />
   </component>
   <component name="PyConsoleOptionsProvider">
@@ -301,7 +293,26 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.RL with NLU &amp; NLG">
+  <component name="RunManager" selected="Python.Prepare User Sim Data">
+    <configuration name="Prepare User Sim Data" type="PythonConfigurationType" factoryName="Python">
+      <module name="TC-Bot" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="D:\DevelopApp\Anaconda3\envs\py27\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/deep_dialog/usersims" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/deep_dialog/usersims/prepare_data.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+    </configuration>
     <configuration name="RL with NLU &amp; NLG &amp; Output" type="PythonConfigurationType" factoryName="Python">
       <module name="TC-Bot" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -336,6 +347,26 @@
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/run.py" />
       <option name="PARAMETERS" value="--agt 9 --usr 1 --max_turn 40 --movie_kb_path ./deep_dialog/data/movie_kb.1k.p --dqn_hidden_size 80 --experience_replay_pool_size 1000 --episodes 500 --simulation_epoch_size 100 --write_model_dir ./deep_dialog/checkpoints/rl_agent/ --run_mode 3 --act_level 1 --slot_err_prob 0.00 --intent_err_prob 0.00 --batch_size 16 --goal_file_path ./deep_dialog/data/user_goals_first_turn_template.part.movie.v1.p --warm_start 1 --warm_start_epochs 120" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+    </configuration>
+    <configuration name="RL with no NLU &amp; no NLG" type="PythonConfigurationType" factoryName="Python">
+      <output_file path="$PROJECT_DIR$/../../data/TC-bot/log/no_nlg_no_nlu.log" is_save="true" />
+      <module name="TC-Bot" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="D:\DevelopApp\Anaconda3\envs\py27\python.exe" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/run.py" />
+      <option name="PARAMETERS" value="--agt 9 --usr 1 --max_turn 40 --movie_kb_path ./deep_dialog/data/movie_kb.1k.p --dqn_hidden_size 80 --experience_replay_pool_size 1000 --episodes 500 --simulation_epoch_size 100 --write_model_dir ./deep_dialog/checkpoints/rl_agent/ --run_mode 2 --act_level 0 --slot_err_prob 0.00 --intent_err_prob 0.00 --batch_size 16 --goal_file_path ./deep_dialog/data/user_goals_first_turn_template.part.movie.v1.p --warm_start 1 --warm_start_epochs 120" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -382,6 +413,8 @@
       <item itemvalue="Python.convert data" />
       <item itemvalue="Python.Rule Agent" />
       <item itemvalue="Python.RL with NLU &amp; NLG" />
+      <item itemvalue="Python.RL with no NLU &amp; no NLG" />
+      <item itemvalue="Python.Prepare User Sim Data" />
       <item itemvalue="Python.RL with NLU &amp; NLG &amp; Output" />
     </list>
   </component>
@@ -403,20 +436,20 @@
     <editor active="true" />
     <layout>
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
+      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.50159913" side_tool="true" weight="0.39977604" />
       <window_info anchor="bottom" id="Database Changes" order="8" show_stripe_button="false" />
-      <window_info active="true" anchor="bottom" id="File Transfer" order="9" visible="true" weight="0.14333707" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.2094065" />
+      <window_info anchor="bottom" id="File Transfer" order="9" weight="0.14333707" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.4989339" weight="0.11225997" />
       <window_info anchor="bottom" id="Version Control" order="7" weight="0.32922733" />
-      <window_info anchor="bottom" id="Python Console" order="7" weight="0.31905466" />
+      <window_info active="true" anchor="bottom" id="Python Console" order="7" sideWeight="0.49946696" visible="true" weight="0.24076147" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.2530795" />
-      <window_info content_ui="combo" id="Project" order="0" weight="0.18656716" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.19083156" />
       <window_info anchor="bottom" id="Statistic" order="10" weight="0.3293944" />
       <window_info anchor="bottom" id="Docker" order="8" show_stripe_button="false" />
       <window_info anchor="right" id="Database" order="3" />
       <window_info anchor="right" id="SciView" order="3" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="bottom" id="Debug" order="3" sideWeight="0.49840087" weight="0.39977604" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -429,29 +462,29 @@
     </layout>
     <layout-to-restore>
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.18656716" />
       <window_info anchor="bottom" id="Docker" order="11" show_stripe_button="false" />
-      <window_info anchor="bottom" id="Version Control" order="7" weight="0.32922733" />
-      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
-      <window_info anchor="right" id="SciView" order="3" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.2094065" />
+      <window_info anchor="bottom" id="File Transfer" order="13" weight="0.33482644" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.18656716" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Database Changes" order="12" show_stripe_button="false" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.2094065" />
-      <window_info anchor="bottom" id="Find" order="1" />
+      <window_info anchor="bottom" id="Version Control" order="7" weight="0.32922733" />
       <window_info anchor="bottom" id="Statistic" order="14" weight="0.3293944" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
-      <window_info anchor="right" id="Database" order="4" />
-      <window_info anchor="bottom" id="Terminal" order="8" weight="0.2530795" />
-      <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
-      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
-      <window_info id="Favorites" order="2" side_tool="true" />
-      <window_info anchor="bottom" id="File Transfer" order="13" weight="0.33482644" />
-      <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="right" id="Data View" order="5" />
+      <window_info anchor="bottom" id="Find" order="1" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="bottom" id="Terminal" order="8" weight="0.2530795" />
       <window_info anchor="bottom" id="Python Console" order="10" weight="0.31905466" />
+      <window_info anchor="bottom" id="Database Changes" order="12" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
+      <window_info anchor="right" id="SciView" order="3" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="right" id="Database" order="4" />
+      <window_info anchor="right" id="Data View" order="5" />
+      <window_info id="Favorites" order="2" side_tool="true" />
     </layout-to-restore>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -488,38 +521,10 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="1" />
+      <option name="time" value="10" />
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/README.md">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3192">
-          <caret line="168" column="3" lean-forward="true" selection-start-line="168" selection-start-column="3" selection-end-line="168" selection-end-column="3" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/deep_dialog/nlu/nlu.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="836">
-          <caret line="49" column="57" selection-start-line="49" selection-start-column="57" selection-end-line="49" selection-end-column="57" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/deep_dialog/dialog_config.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="323">
-          <caret line="17" column="18" lean-forward="true" selection-start-line="17" selection-start-column="18" selection-end-line="17" selection-end-column="18" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/deep_dialog/nlg/nlg.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2413">
-          <caret line="132" column="4" selection-start-line="132" selection-start-column="4" selection-end-line="132" selection-end-column="4" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/deep_dialog/agents/agent_dqn.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1615">
@@ -801,44 +806,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/deep_dialog/usersims/usersim_rule.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="427">
-          <caret line="182" column="35" lean-forward="true" selection-start-line="182" selection-start-column="35" selection-end-line="182" selection-end-column="35" />
-          <folding>
-            <element signature="e#315#349#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/deep_dialog/dialog_config.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="771">
-          <caret line="102" column="36" lean-forward="true" selection-start-line="102" selection-start-column="36" selection-end-line="102" selection-end-column="36" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/deep_dialog/usersims/action_classifier.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="540">
-          <caret line="42" column="52" selection-start-line="42" selection-start-column="52" selection-end-line="42" selection-end-column="52" />
-          <folding>
-            <element signature="e#17#29#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/deep_dialog/usersims/user_action_predictor.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="600">
-          <caret line="51" column="27" selection-start-line="51" selection-start-column="27" selection-end-line="51" selection-end-column="27" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/deep_dialog/data/dia_act_nl_pairs.v6.json">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="443">
-          <caret line="1169" column="9" lean-forward="true" selection-start-line="1169" selection-start-column="9" selection-end-line="1169" selection-end-column="9" />
+        <state relative-caret-position="23380">
+          <caret line="1169" column="9" selection-start-line="1169" selection-start-column="9" selection-end-line="1169" selection-end-column="9" />
           <folding>
             <element signature="e#95299#95673#0" />
             <element signature="e#95699#96982#0" />
@@ -849,12 +820,75 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://D:/DevelopApp/Anaconda3/envs/py27/Lib/json/decoder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="366">
+          <caret line="383" lean-forward="true" selection-start-line="383" selection-end-line="383" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/deep_dialog/usersims/usersim_rule.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3640">
+          <caret line="182" column="35" selection-start-line="182" selection-start-column="35" selection-end-line="182" selection-end-column="35" />
+          <folding>
+            <element signature="e#315#349#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/run.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="600">
-          <caret line="48" lean-forward="true" selection-start-line="48" selection-end-line="48" />
+        <state relative-caret-position="252">
+          <caret line="37" column="39" selection-start-line="37" selection-start-column="39" selection-end-line="37" selection-end-column="39" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/deep_dialog/usersims/user_action_predictor.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="69">
+          <caret line="75" column="22" selection-start-line="75" selection-start-column="22" selection-end-line="75" selection-end-column="22" />
           <folding>
-            <element signature="e#1977#2008#0" expanded="true" />
+            <element signature="e#332#344#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/deep_dialog/usersims/prepare_data.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="640">
+          <caret line="165" column="7" selection-start-line="165" selection-start-column="7" selection-end-line="165" selection-end-column="7" />
+          <folding>
+            <element signature="e#16#63#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/deep_dialog/dialog_config.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="460">
+          <caret line="23" column="18" selection-start-line="23" selection-start-column="18" selection-end-line="23" selection-end-column="18" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://D:/DevelopApp/Anaconda3/envs/py27/Lib/site-packages/torch/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2340" />
+      </provider>
+    </entry>
+    <entry file="file://D:/DevelopApp/Anaconda3/envs/py27/Lib/site-packages/torch/nn/modules/module.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="340">
+          <caret line="57" column="13" selection-start-line="57" selection-start-column="13" selection-end-line="57" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/deep_dialog/usersims/classifier.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="548">
+          <caret line="136" lean-forward="true" selection-start-line="136" selection-end-line="136" />
+          <folding>
+            <element signature="e#17#29#0" expanded="true" />
           </folding>
         </state>
       </provider>
