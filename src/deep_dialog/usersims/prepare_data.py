@@ -189,5 +189,13 @@ def prepare_dataset(raw_data_path, output_path, raw_data_type='train_log'):
         raise NotImplementedError
 
 
+def cook_data_set(target_dataset_lst):
+    """
+    Given split dataset as a list, cook the data set into vector representation.
+    :return:
+    """
+    pass
+
+
 if __name__ == '__main__':
     prepare_dataset(raw_data_path=LOG_PATH, output_path=OUTPUT_PATH)

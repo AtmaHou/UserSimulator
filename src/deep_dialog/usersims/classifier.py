@@ -86,9 +86,9 @@ def test_MultiLableClassifyLayer():
     :return:
     """
     # Make fake dataset
-    # (1, 0) => target labels 0+2
-    # (0, 1) => target labels 1
-    # (1, 1) => target labels 3
+    # (1, 0) => target labels 1 0 1
+    # (0, 1) => target labels 0 1 0
+    # (1, 1) => target labels 0 0 1
     train = []
     labels = []
     for i in range(10000):
@@ -106,7 +106,7 @@ def test_MultiLableClassifyLayer():
     # Training process
     nlabel = len(labels[0])  # => 3
     input_size = len(train[0])
-    classifier = MultiLableClassifyLayer(input_size=input_size, num_tags=nlabel)
+    classifier = MultiLableClassifyLayer(input_size=input_size, hidden_size=64, num_tags=nlabel)
 
     optimizer = optim.Adam(classifier.parameters())
     criterion = nn.MultiLabelSoftMarginLoss()
@@ -129,7 +129,14 @@ def test_MultiLableClassifyLayer():
             losses.append(loss.data.mean())
         print('[%d/%d] Loss: %.3f' % (epoch + 1, epochs, np.mean(losses)))
     # Testing
+    print('Start Testing')
     classifier.eval()
+    input_sample = [float(a) for a in raw_input().split()]
+    while input_sample:
+        input_sample = [float(a) for a in raw_input().split()]
+        input_sample_v = Variable(torch.FloatTensor(input_sample)).view(1, -1)
+        output = classifier(input_sample_v)
+        print('pred resultis', output)
 
 
 if __name__ == "__main__":

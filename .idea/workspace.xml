@@ -2,10 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="3bfa9a2e-dbc6-449b-9d98-0f5da58a24f7" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/deep_dialog/dialog_config.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/deep_dialog/dialog_config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/deep_dialog/usersims/action_classifier.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/deep_dialog/usersims/classifier.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/deep_dialog/usersims/user_action_predictor.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/deep_dialog/usersims/user_action_predictor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/deep_dialog/usersims/classifier.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/deep_dialog/usersims/classifier.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/deep_dialog/usersims/prepare_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/deep_dialog/usersims/prepare_data.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -86,11 +84,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="classifier.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="classifier.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/deep_dialog/usersims/classifier.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="548">
-              <caret line="136" lean-forward="true" selection-start-line="136" selection-end-line="136" />
+            <state relative-caret-position="183">
+              <caret line="116" column="31" lean-forward="true" selection-start-line="116" selection-start-column="31" selection-end-line="116" selection-end-column="31" />
               <folding>
                 <element signature="e#17#29#0" expanded="true" />
               </folding>
@@ -98,11 +96,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="prepare_data.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="prepare_data.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/deep_dialog/usersims/prepare_data.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="640">
-              <caret line="165" column="7" selection-start-line="165" selection-start-column="7" selection-end-line="165" selection-end-column="7" />
+            <state relative-caret-position="530">
+              <caret line="193" column="80" selection-start-line="193" selection-start-column="80" selection-end-line="193" selection-end-column="80" />
               <folding>
                 <element signature="e#16#63#0" expanded="true" />
               </folding>
@@ -180,11 +178,11 @@
         <option value="$PROJECT_DIR$/src/deep_dialog/usersims/usersim_rule.py" />
         <option value="$PROJECT_DIR$/src/deep_dialog/agents/agent_dqn.py" />
         <option value="$PROJECT_DIR$/src/run.py" />
-        <option value="$PROJECT_DIR$/src/deep_dialog/usersims/prepare_data.py" />
         <option value="$PROJECT_DIR$/src/deep_dialog/usersims/user_action_predictor.py" />
         <option value="$PROJECT_DIR$/src/deep_dialog/dialog_config.py" />
         <option value="$PROJECT_DIR$/src/deep_dialog/usersims/action_classifier.py" />
         <option value="$PROJECT_DIR$/src/deep_dialog/usersims/classifier.py" />
+        <option value="$PROJECT_DIR$/src/deep_dialog/usersims/prepare_data.py" />
       </list>
     </option>
   </component>
@@ -195,9 +193,9 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="-8" />
-    <option name="width" value="1937" />
-    <option name="height" value="1038" />
+    <option name="x" value="-10" />
+    <option name="width" value="2422" />
+    <option name="height" value="1298" />
   </component>
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="1" id="Add" />
@@ -432,7 +430,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
+    <frame x="-7" y="-7" width="1550" height="838" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info anchor="bottom" id="TODO" order="6" />
@@ -441,9 +439,9 @@
       <window_info anchor="bottom" id="File Transfer" order="9" weight="0.14333707" />
       <window_info anchor="bottom" id="Run" order="2" sideWeight="0.4989339" weight="0.11225997" />
       <window_info anchor="bottom" id="Version Control" order="7" weight="0.32922733" />
-      <window_info active="true" anchor="bottom" id="Python Console" order="7" sideWeight="0.49946696" visible="true" weight="0.24076147" />
+      <window_info anchor="bottom" id="Python Console" order="7" sideWeight="0.49946696" weight="0.24076147" />
       <window_info anchor="bottom" id="Terminal" order="7" weight="0.2530795" />
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.19083156" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.23994638" />
       <window_info anchor="bottom" id="Statistic" order="10" weight="0.3293944" />
       <window_info anchor="bottom" id="Docker" order="8" show_stripe_button="false" />
       <window_info anchor="right" id="Database" order="3" />
@@ -854,16 +852,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/deep_dialog/usersims/prepare_data.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="640">
-          <caret line="165" column="7" selection-start-line="165" selection-start-column="7" selection-end-line="165" selection-end-column="7" />
-          <folding>
-            <element signature="e#16#63#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/deep_dialog/dialog_config.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="460">
@@ -885,10 +873,20 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/deep_dialog/usersims/classifier.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="548">
-          <caret line="136" lean-forward="true" selection-start-line="136" selection-end-line="136" />
+        <state relative-caret-position="183">
+          <caret line="116" column="31" lean-forward="true" selection-start-line="116" selection-start-column="31" selection-end-line="116" selection-end-column="31" />
           <folding>
             <element signature="e#17#29#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/deep_dialog/usersims/prepare_data.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="530">
+          <caret line="193" column="80" selection-start-line="193" selection-start-column="80" selection-end-line="193" selection-end-column="80" />
+          <folding>
+            <element signature="e#16#63#0" expanded="true" />
           </folding>
         </state>
       </provider>
