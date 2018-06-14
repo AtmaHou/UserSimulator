@@ -87,8 +87,8 @@ class SuperviseUserSimulator(RuleSimulator):
         self.fill_vectors(request_slots_vector, self.state['request_slots'].keys, dialog_config.user_request_slots)
         self.fill_vectors(rest_slots_vector, self.state['rest_slots'], dialog_config.user_inform_slots)
         self.fill_vectors(system_action_vector, system_action, dialog_config.user_inform_slots)
-        dialog_status_vector = self.dialog_status  # -1, 0, 1 failed, success, no out come
-        raise Exception  # check system action component
+        dialog_status_vector = self.dialog_status  # -1, 0, 1 failed, no out come, success(the representation here is a little different to TC bot)
+        raise Exception  # check system action component, change the representation to training data style
 
         # stack vector
         state_representation = np.hstack((

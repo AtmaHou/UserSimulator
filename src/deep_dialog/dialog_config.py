@@ -104,3 +104,4 @@ DATA_DIR = 'E:/Projects/Research/TaskOrientedDialogue/data/TC-bot/data/'
 
 TRAIN_LOG_PATH = LOG_DIR + 'no_nlg_no_nlu.log'
 EXTRACTED_LOG_DATA_PATH = LOG_DIR + 'extracted_no_nlg_no_nlu.json'
+EXPR_DIR = DATA_DIR + 'no_nlg_no_nlu/'
