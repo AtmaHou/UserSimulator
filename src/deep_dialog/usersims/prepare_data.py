@@ -13,8 +13,8 @@ LOG_PATH = dialog_config.TRAIN_LOG_PATH
 EXTRACTED_LOG_DATA_PATH = dialog_config.EXTRACTED_LOG_DATA_PATH
 EXPR_DIR = dialog_config.EXPR_DIR
 
-# DEBUG = False
-DEBUG = True
+DEBUG = False
+# DEBUG = True
 
 # setting logging
 if DEBUG:
@@ -265,12 +265,12 @@ def new_state(user_goal, state_v_component, state_dict, last_sys_turn, user_info
         )
         new_state_dict['rest_slots_v'] = create_3state_v(
             active_set=state_dict['rest_slots'],
-            negative_set= set(user_goal['request_slots'].keys()) - set(state_dict['rest_slots']),
+            negative_set=set(user_goal['request_slots'].keys()) - set(state_dict['rest_slots']),
             reference=user_request_slot2id
         )
         new_state_dict['system_diaact_v'] = create_one_hot_v([last_sys_turn['diaact']], diaact2id)
         new_state_dict['system_inform_slots_v'] = create_one_hot_v(last_sys_turn['inform_slots'].keys(), sys_inform_slot2id)
-        new_state_dict['system_request_slots_v'] = create_one_hot_v(last_sys_turn['request_slots'].keys, sys_request_slot2id)
+        new_state_dict['system_request_slots_v'] = create_one_hot_v(last_sys_turn['request_slots'].keys(), sys_request_slot2id)
         new_state_dict['consistency_v'] = create_3state_v(
             active_set=state_dict['consistent_slots'],
             negative_set=state_dict['inconsistent_slots'],
@@ -292,20 +292,11 @@ def cook_one_dialogue(dialogue_item, user_inform_slot2id, user_request_slot2id,
     turns = dialogue_item['turns']
     samples = []
     labels = []
+    turn_ids = []
 
     # initialize state representation
     # Use this vector to keep order
-    state_v_component = [
-        'goal_inform_slots_v',
-        'goal_request_slots_v',
-        'history_slots_v',  # informed slots, 1 informed, 0 irrelevant, -1 not informed,
-        'rest_slots_v',  # remained request slots, 1 for remained, 0 irrelevant, -1 for already got,
-        'system_diaact_v',  # system diaact,
-        'system_inform_slots_v',  # inform slots of sys response,
-        'system_request_slots_v',  # request slots of sys response,
-        'consistency_v',  # for each position, -1 inconsistent, 0 irrelevent or not requested, 1 consistent,
-        'dialog_status_v'  # -1, 0, 1 for failed, no outcome, success,
-    ]
+    state_v_component = dialog_config.STATE_V_COMPONENT
     state_dict = {
         # component for vector representation
         'goal_inform_slots_v': create_one_hot_v(user_goal['inform_slots'].keys(), user_inform_slot2id),
@@ -320,9 +311,9 @@ def cook_one_dialogue(dialogue_item, user_inform_slot2id, user_request_slot2id,
 
         # component for tracking specific slots
         'history_slots': [],  # track informed slots,
-        'rest_slots': [user_goal['request_slots'].keys()],  # track remained slots,
-        'consistent_slot': [],  # track consistency
-        'inconsistent_slot': [],  # track inconsistency
+        'rest_slots': user_goal['request_slots'].keys(),  # track remained slots,
+        'consistent_slots': [],  # track consistency
+        'inconsistent_slots': [],  # track inconsistency
     }
 
     # Extract samples
@@ -330,15 +321,22 @@ def cook_one_dialogue(dialogue_item, user_inform_slot2id, user_request_slot2id,
     for ind, turn in enumerate(turns):
         if turn['speaker'] == 'sys':
             last_sys_turn = turn
-            for slot, value in turn['inform_slots'].values():
+            for slot, value in turn['inform_slots'].items():
                 # update rest slot
-                state_dict['rest_slots'].remove(slot)
+                if slot in state_dict['rest_slots']:
+                    state_dict['rest_slots'].remove(slot)
                 # update consistent slot and inconsistent slot
-                if slot in user_goal['request_slot']:
-                    if value != user_goal['request_slot'][slot] and slot not in state_dict['inconsistent_slot']:
-                        state_dict['inconsistent_slot'].append(slot)
-                    if value == user_goal['request_slot'][slot] and slot not in state_dict['consistent_slot']:
-                        state_dict['consistent_slot'].append(slot)
+                # Inconsistency should compare to inform slot,
+                if slot in user_goal['inform_slots']:
+                    if value != user_goal['inform_slots'][slot] and slot not in state_dict['inconsistent_slots']:
+                        state_dict['inconsistent_slots'].append(slot)
+                        if slot in state_dict['consistent_slots']:
+                            state_dict['consistent_slots'].remove(slot)
+                    elif value == user_goal['inform_slots'][slot] and slot not in state_dict['consistent_slots']:
+                        state_dict['consistent_slots'].append(slot)
+                        if slot in state_dict['inconsistent_slots']:
+                            state_dict['inconsistent_slots'].remove(slot)
+
 
         elif turn['speaker'] == 'usr':
             # build state vector and label
@@ -348,19 +346,35 @@ def cook_one_dialogue(dialogue_item, user_inform_slot2id, user_request_slot2id,
                 sys_inform_slot2id, sys_request_slot2id, diaact2id,
                 dialog_status=(int(ind==len(turns)-1))  # Last turn represent finish.
             )
+            if len([turn['diaact']]) > 1:
+                print('Error:Mulit-diaact')
+                print(turn)
+                raise RuntimeError
+            for slot in turn['inform_slots'].keys():
+                if slot not in state_dict['history_slots']:
+                    state_dict['history_slots'].append(slot)
+
             label = create_one_hot_v([turn['diaact']], diaact2id) + \
                     create_one_hot_v(turn['inform_slots'].keys(), user_inform_slot2id) + \
                     create_one_hot_v(turn['request_slots'].keys(), user_request_slot2id)
+            # Debug:
+            diaact_v = label[: len(diaact2id)]
+            if sum(diaact_v) > 1 or sum(diaact_v) <= 0:
+                print("ERROR: Wrong diaact")
+                print(diaact_v, label, turn)
+                raise RuntimeError
+
             samples.append(state_v)
             labels.append(label)
+            turn_ids.append(ind)
 
-            if DEBUG:
-                logging.debug("DEBUG one turn:state_dict:{},\n turn:{},\n last_sys_turn:{}\n".format(state_dict, turn, last_sys_turn))
+
+            logging.debug("DEBUG one turn:state_dict:{},\n turn:{},\n last_sys_turn:{}\n state:{}\n label:{}\n ".format(state_dict, turn, last_sys_turn, state_v, label))
             for slot in turn['inform_slots']:
                 if slot not in state_dict['history_slots']:
                     state_dict['history_slots'].append(slot)
 
-    return samples, labels
+    return samples, labels, turn_ids
 
 
 def lst2dict(lst):
@@ -371,8 +385,8 @@ def lst2dict(lst):
 
 
 def dump_data(data_item, source_data_path, output_dir, data_mark):
-    soure_data_name = os.path.basename(source_data_path)
-    with open(os.path.join(output_dir, soure_data_name + '.' + data_mark + '.json')) as writer:
+    soure_data_name = '.'.join(os.path.basename(source_data_path).split('.')[:-1])
+    with open(os.path.join(output_dir, soure_data_name + '.' + data_mark + '.json'), 'w') as writer:
         json.dump(data_item, writer, indent=2)
 
 
@@ -385,16 +399,27 @@ def cook_dataset(target_dataset_path, output_dir, split_rate, dump_processed_dat
         os.mkdir(output_dir)
 
     # create dict for slot_type and diaact
-    all_user_request_slot = dialog_config.user_request_slots
-    all_user_inform_slot = dialog_config.user_inform_slots
-    user_inform_slot2id, id2user_inform_slot = lst2dict(all_user_inform_slot)
-    user_request_slot2id, id2user_request_slot = lst2dict(all_user_request_slot)
-    sys_inform_slot2id, id2sys_inform_slot = lst2dict(dialog_config.sys_inform_slots)
-    sys_request_slot2id, id2sys_request_slot = lst2dict(dialog_config.sys_request_slots)
+    full_slot_set = set(dialog_config.sys_inform_slots) | set(dialog_config.sys_request_slots)
+    full_slot2id, full_id2slot = lst2dict(full_slot_set)
+
+    ########################################################################
+    # TODO seems that system will inform requestable only slot, so set them all same here
+    ########################################################################
+    user_inform_slot2id, id2user_inform_slot = full_slot2id, full_id2slot
+    user_request_slot2id, id2user_request_slot = full_slot2id, full_id2slot
+    sys_inform_slot2id, id2sys_inform_slot = full_slot2id, full_id2slot
+    sys_request_slot2id, id2sys_request_slot = full_slot2id, full_id2slot
+
+    # user_inform_slot2id, id2user_inform_slot = lst2dict(dialog_config.user_inform_slots)
+    # user_request_slot2id, id2user_request_slot = lst2dict(dialog_config.user_request_slots)
+    # sys_inform_slot2id, id2sys_inform_slot = lst2dict(dialog_config.sys_inform_slots)
+    # sys_request_slot2id, id2sys_request_slot = lst2dict(dialog_config.sys_request_slots)
     diaact2id, id2diaact = lst2dict([action['diaact'] for action in dialog_config.feasible_actions])
+
     # convert data to vector
     all_sample = []
     all_label = []
+    all_turn_id = []
     with open(target_dataset_path, 'r') as reader:
         data_set = json.load(reader)
     all_data = data_set['warm_start_data'] + data_set['train_data']
@@ -402,7 +427,7 @@ def cook_dataset(target_dataset_path, output_dir, split_rate, dump_processed_dat
         all_data = all_data[:1000]
     for ind, dialog_item in enumerate(all_data):
         if dialog_item['success']:  # Only use successful sample now
-            samples, labels = cook_one_dialogue(
+            samples, labels, turn_ids = cook_one_dialogue(
                 dialog_item,
                 user_inform_slot2id,
                 user_request_slot2id,
@@ -412,11 +437,12 @@ def cook_dataset(target_dataset_path, output_dir, split_rate, dump_processed_dat
             )
             all_sample.extend(samples)
             all_label.extend(labels)
+            all_turn_id.extend(turn_ids)
         if ind % 100 == 0:
             logging.info("{0} dialogues processed".format(ind))
 
-    train_end_idx = len(all_sample) * split_rate[0]
-    dev_end_idx = len(all_sample) *split_rate[1] + train_end_idx
+    train_end_idx = int(len(all_sample) * split_rate[0])
+    dev_end_idx = int(len(all_sample) *split_rate[1]) + train_end_idx
 
     # split data
     train_data = all_sample[:train_end_idx]
@@ -426,6 +452,10 @@ def cook_dataset(target_dataset_path, output_dir, split_rate, dump_processed_dat
     train_label = all_label[:train_end_idx]
     dev_label = all_label[train_end_idx:dev_end_idx]
     test_label = all_label[dev_end_idx:]
+
+    train_turn_id = all_turn_id[:train_end_idx]
+    dev_turn_id = all_turn_id[train_end_idx:dev_end_idx]
+    test_turn_id = all_turn_id[dev_end_idx:]
 
     logging.info('Finish split data: train-{0}, dev-{1}, test-{2}'.
                  format(len(train_data), len(dev_data), len(test_data)))
@@ -445,16 +475,19 @@ def cook_dataset(target_dataset_path, output_dir, split_rate, dump_processed_dat
 
     # dump data
     if dump_processed_data:
-        dump_data(zip(train_data, train_label), target_dataset_path, output_dir, 'train')
-        dump_data(zip(dev_data, dev_label), target_dataset_path, output_dir, 'dev')
-        dump_data(zip(test_data, test_label), target_dataset_path, output_dir, 'dev')
+        dump_data(zip(train_data, train_label, train_turn_id), target_dataset_path, output_dir, 'train')
+        dump_data(zip(dev_data, dev_label, dev_turn_id), target_dataset_path, output_dir, 'dev')
+        dump_data(zip(test_data, test_label, test_turn_id), target_dataset_path, output_dir, 'test')
         dump_data(all_dict, target_dataset_path, output_dir, 'dict')
 
     return train_data, train_label, dev_data, dev_label, test_data, test_label, all_dict
 
 
 if __name__ == '__main__':
+    # extract data from raw log data
     # prepare_dataset(raw_data_path=LOG_PATH, output_path=OUTPUT_PATH)
+
+    # cook json data into vector
     cook_dataset(
         target_dataset_path=EXTRACTED_LOG_DATA_PATH,
         output_dir=EXPR_DIR,

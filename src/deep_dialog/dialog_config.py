@@ -99,9 +99,27 @@ for slot in user_request_slots:
 ############################################################################
 #   File path
 ############################################################################
-LOG_DIR = 'E:/Projects/Research/TaskOrientedDialogue/data/TC-bot/log/'
-DATA_DIR = 'E:/Projects/Research/TaskOrientedDialogue/data/TC-bot/data/'
+LOG_DIR = '/users4/ythou/Projects/TaskOrientedDialogue/data/TC-bot/log/'
+DATA_DIR = '/users4/ythou/Projects/TaskOrientedDialogue/data/TC-bot/data/'
+#
+# LOG_DIR = 'E:/Projects/Research/TaskOrientedDialogue/data/TC-bot/log/'
+# DATA_DIR = 'E:/Projects/Research/TaskOrientedDialogue/data/TC-bot/data/'
 
 TRAIN_LOG_PATH = LOG_DIR + 'no_nlg_no_nlu.log'
 EXTRACTED_LOG_DATA_PATH = LOG_DIR + 'extracted_no_nlg_no_nlu.json'
-EXPR_DIR = DATA_DIR + 'no_nlg_no_nlu/'
+EXPR_DIR = DATA_DIR + 'extracted_no_nlg_no_nlu/'
+
+############################################################################
+#   User Simulator setting
+############################################################################
+STATE_V_COMPONENT = [
+    'goal_inform_slots_v',
+    'goal_request_slots_v',
+    'history_slots_v',  # informed slots, 1 informed, 0 irrelevant, -1 not informed,
+    'rest_slots_v',  # remained request slots, 1 for remained, 0 irrelevant, -1 for already got,
+    'system_diaact_v',  # system diaact,
+    'system_inform_slots_v',  # inform slots of sys response,
+    'system_request_slots_v',  # request slots of sys response,
+    'consistency_v',  # for each position, -1 inconsistent, 0 irrelevent or not requested, 1 consistent,
+    'dialog_status_v'  # -1, 0, 1 for failed, no outcome, success,
+]

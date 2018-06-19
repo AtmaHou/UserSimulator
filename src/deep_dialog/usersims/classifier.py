@@ -68,16 +68,32 @@ class ClassifyLayer(nn.Module):
 
 
 class MultiLableClassifyLayer(nn.Module):
-    def __init__(self, input_size, hidden_size, num_tags):
+    def __init__(self, input_size, hidden_size, num_tags, opt, use_cuda=False):
         super(MultiLableClassifyLayer, self).__init__()
+
         self.main = nn.Sequential(
             nn.Linear(input_size, hidden_size),
             nn.ReLU(),
             nn.Linear(hidden_size, num_tags)
         )
+        self.criterion = nn.MultiLabelSoftMarginLoss()
 
-    def forward(self, input):
-        return self.main(input)
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.num_tags = num_tags
+        self.use_cuda = use_cuda
+        self.opt = opt
+
+    def forward(self, input, golden=None):
+        # print('DEBUG:', input, golden)
+        input, golden = Variable(input.float()), Variable(golden.float())
+        pred = self.main(input)  # For each pos, > 0 for positive tag, < 0 for negative tag
+        # For each pos, 1 for positive tag, 0 for negative tag
+        classify_results = [[int(pred_j > 0) for pred_j in pred_i] for pred_i in pred.data]
+        if self.training:
+            return classify_results, self.criterion(pred, golden)
+        else:
+            return classify_results, torch.FloatTensor([0.0])
 
 
 def test_MultiLableClassifyLayer():
@@ -109,7 +125,6 @@ def test_MultiLableClassifyLayer():
     classifier = MultiLableClassifyLayer(input_size=input_size, hidden_size=64, num_tags=nlabel)
 
     optimizer = optim.Adam(classifier.parameters())
-    criterion = nn.MultiLabelSoftMarginLoss()
 
     # Training
     classifier.train()
@@ -120,8 +135,7 @@ def test_MultiLableClassifyLayer():
             inputv = Variable(torch.FloatTensor(sample)).view(1, -1)
             labelsv = Variable(torch.FloatTensor(labels[i])).view(1, -1)
 
-            output = classifier(inputv)
-            loss = criterion(output, labelsv)
+            output, loss = classifier(inputv)
 
             optimizer.zero_grad()
             loss.backward()
