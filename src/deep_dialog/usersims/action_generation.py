@@ -29,7 +29,8 @@ logging.basicConfig(filename='', format='%(asctime)-15s %(levelname)s: %(message
 PROJECT_DIR = '/users4/ythou/Projects/'  # for hpc
 # PROJECT_DIR = 'E:/Projects/Research/'  # for tencent linux
 
-DATA_MARK = 'extracted_no_nlg_no_nlu'
+DATA_MARK = 'extracted_no_nlg_no_nlu_lstm '
+# DATA_MARK = 'extracted_no_nlg_no_nlu'
 
 
 def get_f1(pred_tags_lst, golden_tags_lst):
@@ -295,6 +296,78 @@ def one_turn_classification(opt):
         train_input, train_label, train_turn_id = zip(* train_data)
         dev_input, dev_label, dev_turn_id = zip(* dev_data)
         test_input, test_label, test_turn_id = zip(* test_data)
+        train_x, train_y = create_batches(train_input, train_label, opt.batch_size, use_cuda=use_cuda)
+        dev_x, dev_y = create_batches(dev_input, dev_label, opt.batch_size, use_cuda=use_cuda)
+        test_x, test_y = create_batches(test_input, test_label, opt.batch_size, use_cuda=use_cuda)
+
+        input_size = len(train_input[0])
+        num_tags = len(train_label[0])
+        classifier = MultiLableClassifyLayer(input_size=input_size, hidden_size=opt.hidden_dim, num_tags=num_tags,
+                                             opt=opt, use_cuda=use_cuda)
+
+        optimizer = optim.Adam(classifier.parameters())
+
+        best_valid, test_result = -1e8, -1e8
+        for epoch in range(opt.max_epoch):
+            best_valid, test_result = train_model(
+                epoch=epoch,
+                model=classifier,
+                optimizer=optimizer,
+                train_x=train_x, train_y=train_y,
+                valid_x=dev_x, valid_y=dev_y,
+                test_x=test_x, test_y=test_y,
+                ix2label=full_dict, best_valid=best_valid, test_f1_score=test_result
+            )
+            if opt.lr_decay > 0:
+                optimizer.param_groups[0]['lr'] *= opt.lr_decay  # there is only one group, so use index 0
+            # logging.info('Total encoder time: {:.2f}s'.format(model.eval_time / (epoch + 1)))
+            # logging.info('Total embedding time: {:.2f}s'.format(model.emb_time / (epoch + 1)))
+            # logging.info('Total classify time: {:.2f}s'.format(model.classify_time / (epoch + 1)))
+        logging.info("best_valid_f1: {:.6f}".format(best_valid))
+        logging.info("test_f1: {:.6f}".format(test_result))
+
+
+def transform_data_into_history_style(data, turn_ids, history_turns=5):
+    ret = []
+    history = []
+    for item, turn_id in zip(data, turn_ids):
+        if turn_id == 0:
+            history = [item] * (history_turns - 1)  # pad empty history
+        elif len(history) < 4:
+            history = [item] * (history_turns - 1)  # deal with in-complete dialogue
+        history.append(item)  # add current state vector
+        sample = history[-history_turns:]
+        ret.append(sample)
+    return ret
+
+
+def history_based_classification(opt):
+    use_cuda = opt.gpu >= 0 and torch.cuda.is_available()
+    with open(opt.train_path, 'r') as train_file, \
+            open(opt.dev_path, 'r') as dev_file, \
+            open(opt.test_path, 'r') as test_file, \
+            open(opt.dict_path, 'r') as dict_file:
+        logging.info('Start loading data from:\ntrain:{}\ndev:{}\ntest:{}\ndict:{}\n'.format(
+            opt.train_path, opt.dev_path, opt.test_path, opt.dict_path
+        ))
+        train_data = json.load(train_file)
+        dev_data = json.load(dev_file)
+        test_data = json.load(test_file)
+        full_dict = json.load(dict_file)
+
+        # TODO: change full dict to a whole dict
+        logging.info('Finish data loading.')
+        print('Finish  data loading!!!!!!!!!!')
+        # unpack data
+        train_input, train_label, train_turn_id = zip(*train_data)
+        dev_input, dev_label, dev_turn_id = zip(*dev_data)
+        test_input, test_label, test_turn_id = zip(*test_data)
+
+        # stack history
+        train_input = transform_data_into_history_style(train_input, train_turn_id)
+        dev_input = transform_data_into_history_style(dev_input, dev_turn_id)
+        test_input = transform_data_into_history_style(test_input, test_turn_id)
+
         train_x, train_y = create_batches(train_input, train_label, opt.batch_size, use_cuda=use_cuda)
         dev_x, dev_y = create_batches(dev_input, dev_label, opt.batch_size, use_cuda=use_cuda)
         test_x, test_y = create_batches(test_input, test_label, opt.batch_size, use_cuda=use_cuda)

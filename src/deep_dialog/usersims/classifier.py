@@ -96,6 +96,31 @@ class MultiLableClassifyLayer(nn.Module):
             return classify_results, torch.FloatTensor([0.0])
 
 
+class LSTM_MultiLabelClassifier(nn.Module):
+    def __int__(self, input_size, hidden_size, num_tags, opt, use_cuda=False):
+
+        self.encoder = nn.LSTM(
+            input_size=input_size, hidden_size=hidden_size, num_layers=opt.depth,
+            batch_first=True, dropout=opt.dropout, bidirectional=True
+        )
+        encoder_output_size = 2 * opt.hidden_dim  # because of the bi-directional
+        self.classify_layer = MultiLableClassifyLayer(input_size, hidden_size * 2, num_tags, opt, use_cuda)
+
+        self.criterion = nn.MultiLabelSoftMarginLoss()
+
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.num_tags = num_tags
+        self.use_cuda = use_cuda
+        self.opt = opt
+
+    def forward(self, batch_x, batch_y):
+        batch_size = batch_x.size(0)
+        output, hidden = self.encoder(batch_x)
+        output, loss = self.classify_layer(output, batch_y)
+        return output, loss
+
+
 def test_MultiLableClassifyLayer():
     """
     Unit test for multilabel ClassifyLayer
