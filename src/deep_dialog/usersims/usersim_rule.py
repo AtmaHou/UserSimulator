@@ -109,7 +109,7 @@ class RuleSimulator(UserSimulator):
         
         self.add_nl_to_action(sample_action)
         return sample_action
-    
+
     def _sample_goal(self, goal_set):
         """ sample a user goal  """
         

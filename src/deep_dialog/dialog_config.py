@@ -99,15 +99,27 @@ for slot in user_request_slots:
 ############################################################################
 #   File path
 ############################################################################
+# PROJECT_DIR = 'E:/Projects/Research/'  # for Windows
+PROJECT_DIR = '/users4/ythou/Projects/'  # for hpc
+# PROJECT_DIR = 'E:/Projects/Research/'  # for tencent linux
+
 LOG_DIR = '/users4/ythou/Projects/TaskOrientedDialogue/data/TC-bot/log/'
 DATA_DIR = '/users4/ythou/Projects/TaskOrientedDialogue/data/TC-bot/data/'
-#
 # LOG_DIR = 'E:/Projects/Research/TaskOrientedDialogue/data/TC-bot/log/'
 # DATA_DIR = 'E:/Projects/Research/TaskOrientedDialogue/data/TC-bot/data/'
 
+DATA_MARK = [
+    'extracted_no_nlg_no_nlu',
+    'extracted_no_nlg_no_nlu_lstm',
+    'extracted_no_nlg_no_nlu_seq2seq',
+]
+
+# for raw data
 TRAIN_LOG_PATH = LOG_DIR + 'no_nlg_no_nlu.log'
 EXTRACTED_LOG_DATA_PATH = LOG_DIR + 'extracted_no_nlg_no_nlu.json'
-EXPR_DIR = DATA_DIR + 'extracted_no_nlg_no_nlu/'
+
+# For action generation and prediction
+EXPR_DIR = {(data_mark, DATA_DIR + '{0}/'.format(data_mark)) for data_mark in DATA_MARK}
 
 ############################################################################
 #   User Simulator setting

@@ -32,18 +32,18 @@ import numpy as np
 from deep_dialog import dialog_config
 
 from .usersim_rule import RuleSimulator
-from .nn_models import ClassifyLayer, MultiLableClassifyLayer
+from .nn_models import Seq2SeqActionGenerator
 from .action_generation import *
 from .prepare_data import *
 
-
-DATA_MARK = dialog_config.DATA_MARK[0]
+DATA_MARK = dialog_config.DATA_MARK[2]
 EXPR_DIR = dialog_config.EXPR_DIR[DATA_MARK]
 
 
 class SuperviseUserSimulator(RuleSimulator):
     def __init__(self, movie_dict=None, act_set=None, slot_set=None, start_set=None, params=None, use_cuda=False,
-                 model_path=EXPR_DIR + 'model.pkl', dict_path=EXPR_DIR + 'extracted_no_nlg_no_nlu.dict.json'):
+                 model_path=EXPR_DIR + 'model.pkl', dict_path=EXPR_DIR + '{0}.dict.json'.format(DATA_MARK),
+                 rule_first_turn=False):
         print('Start supervise user simulator')
         # super(SuperviseUserSimulator, self).__init__(movie_dict, act_set, slot_set, start_set, params)
         self.movie_dict = movie_dict
@@ -51,6 +51,7 @@ class SuperviseUserSimulator(RuleSimulator):
         self.slot_set = slot_set
         self.start_set = start_set
 
+        self.rule_first_turn= rule_first_turn
         self.max_turn = params['max_turn']
         self.slot_err_probability = params['slot_err_probability']
         self.slot_err_mode = params['slot_err_mode']
@@ -69,11 +70,20 @@ class SuperviseUserSimulator(RuleSimulator):
             # print(saved_model.keys())
             param = saved_model['param']
             print(param)
-            self.classifier = MultiLableClassifyLayer(input_size=param['input_size'], hidden_size=param['opt'].hidden_dim,
-                                                      num_tags=param['num_tags'], opt=param['opt'], use_cuda=use_cuda)
+            self.classifier = Seq2SeqActionGenerator(
+                input_size=param['input_size'], hidden_size=param['opt'].hidden_dim, n_layers=param['opt'].depth,
+                tgt_vocb_size=len(param['token2id']), max_len=param['opt'].max_len, dropout_p=param['opt'].dropout,
+                sos_id=param['sos_id'], eos_id=param['eos_id'],
+                token2id=param['token2id'], id2token=param['id2token'], opt=param['opt'],
+                bidirectional=param['opt'].direction == 'bi', use_attention=param['opt'].use_attention,
+                input_variable_lengths=False,
+                use_cuda=use_cuda
+            )
             self.classifier.load_state_dict(saved_model['state_dict'])
         with open(dict_path, 'r') as reader:
             self.full_dict = json.load(reader)
+        self.state_dict = {}
+        self.state_v_lst = []
 
     def initialize_episode(self):
         """ Initialize a new episode (dialog)
@@ -99,7 +109,7 @@ class SuperviseUserSimulator(RuleSimulator):
         """ Debug: build a fake goal mannually """
         # self.debug_falk_goal()
 
-        # sample first action
+        ''' sample first action '''
         self.state_dict = {
             # component for vector representation
             'goal_inform_slots_v': create_one_hot_v(self.goal['inform_slots'].keys(), self.full_dict['user_inform_slot2id']),
@@ -121,7 +131,18 @@ class SuperviseUserSimulator(RuleSimulator):
         state_v = []
         for v_name in self.state_v_component:
             state_v.extend(self.state_dict[v_name])
-        user_action = self._sample_action()
+        if self.rule_first_turn:
+            user_action = self._sample_action()
+        else:
+            pred_action = self.predict_action(state_representation)
+            self.fill_slot_value(pred_action)
+            response_action = {}
+            response_action['diaact'] = self.state['diaact']
+            response_action['inform_slots'] = self.state['inform_slots']
+            response_action['request_slots'] = self.state['request_slots']
+            response_action['turn'] = self.state['turn']
+            response_action['nl'] = ""
+            user_action = response_action
         assert (self.episode_over != 1), ' but we just started'
         return user_action
 

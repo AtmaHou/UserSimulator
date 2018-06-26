@@ -19,9 +19,17 @@ import logging
 import numpy as np
 import sys
 
-from classifier import MultiLableClassifyLayer
-sys.path.append("..")
-import dialog_config
+from nn_models import MultiLableClassifyLayer, LSTM_MultiLabelClassifier, Seq2SeqActionGenerator
+from prepare_data import *
+
+try:
+    from deep_dialog import dialog_config
+except:
+    sys.path.append("..")
+    import dialog_config
+
+    sys.path.append("../../")
+    from run_action_generation import main
 
 logging.basicConfig(filename='', format='%(asctime)-15s %(levelname)s: %(message)s', level=logging.INFO)
 
@@ -29,8 +37,8 @@ logging.basicConfig(filename='', format='%(asctime)-15s %(levelname)s: %(message
 PROJECT_DIR = '/users4/ythou/Projects/'  # for hpc
 # PROJECT_DIR = 'E:/Projects/Research/'  # for tencent linux
 
-DATA_MARK = 'extracted_no_nlg_no_nlu_lstm '
-# DATA_MARK = 'extracted_no_nlg_no_nlu'
+# DATA_MARK = 'extracted_no_nlg_no_nlu_lstm '
+DATA_MARK = 'extracted_no_nlg_no_nlu'
 
 
 def get_f1(pred_tags_lst, golden_tags_lst):
@@ -71,7 +79,32 @@ def get_f1(pred_tags_lst, golden_tags_lst):
         precision = 1.0 * tp / (tp + fp)
         recall = 1.0 * tp / (tp + fn)
         f1 = 2 * precision * recall / (precision + recall)
-    return precision, recall, f1,
+    return precision, recall, f1
+
+
+def get_f1_from_generaion(pred_tags_lst, golden_tags_lst, full_dict):
+    id2token = full_dict['tgt_id2token']
+
+    def gen2vector(pred):
+        tokens = [id2token[int(i)] for i in pred]
+        pred_dict = {
+            'diaact': [],
+            'inform_slots': [],
+            'request_slots': []
+        }
+        bad_slot = ['<PAD>', '<EOS>', '<SOS>'] + pred_dict.keys()
+        for ind, token in enumerate(tokens):
+            if token in pred_dict and ind + 1 < len(tokens) and tokens[ind + 1] not in bad_slot:
+                pred_dict[token].append(tokens[ind + 1])
+        # print('DEBUG pred_dict', pred_dict)
+        label = create_one_hot_v(pred_dict['diaact'], full_dict['diaact2id']) + \
+            create_one_hot_v(pred_dict['inform_slots'], full_dict['user_inform_slot2id']) + \
+            create_one_hot_v(pred_dict['request_slots'], full_dict['user_request_slot2id'])
+        return label
+
+    pred_tags_lst = [gen2vector(tags) for tags in pred_tags_lst]
+    golden_tags_lst = [gen2vector(tags) for tags in golden_tags_lst]
+    return get_f1(pred_tags_lst, golden_tags_lst)
 
 
 def vector2state(state_vector, full_dict):
@@ -114,7 +147,7 @@ def vector2action(action_vector, full_dict):
     inform_slot_end = len(id2user_request_slot) + diaact_end
     diaact_v = action_vector[: diaact_end]
     inform_slots_v = action_vector[diaact_end: inform_slot_end]
-    request_slots_v = action_vector[inform_slot_end: ]
+    request_slots_v = action_vector[inform_slot_end:]
 
     diaact = ''
     inform_slots = []
@@ -142,7 +175,7 @@ def vector2action(action_vector, full_dict):
     return ret
 
 
-def eval_model(model, valid_x, valid_y, id2label, opt):
+def eval_model(model, valid_x, valid_y, full_dict, opt):
 
     if opt.output is not None:
         output_path = opt.output
@@ -155,19 +188,22 @@ def eval_model(model, valid_x, valid_y, id2label, opt):
     for x, y in zip(valid_x, valid_y):
         output, loss = model.forward(x, y)
         output_data = output
-        for s, pred_a, gold_a in zip(x, output_data, y):
-            log = {
-                'state': vector2state(s, id2label),
-                'pred': vector2action(pred_a, id2label),
-                'gold': vector2action(gold_a, id2label),
-            }
-            if output_file:
-                output_file.write(json.dumps(log))
+        # for s, pred_a, gold_a in zip(x, output_data, y):
+            # log = {
+            #     'state': vector2state(s.tolist(), id2label),
+            #     'pred': vector2action(pred_a, id2label),
+            #     'gold': vector2action(gold_a, id2label),
+            # }
+            # if output_file:
+            #     output_file.write(json.dumps(log))
         all_preds.extend(output_data)
 
     output_file.close()
     valid_y = torch.cat(valid_y)  # re-form batches into one
-    precision, recall, f1 = get_f1(pred_tags_lst=all_preds, golden_tags_lst=valid_y)
+    if opt.seq2seq_gen:
+        precision, recall, f1 = get_f1_from_generaion(pred_tags_lst=all_preds, golden_tags_lst=valid_y, full_dict=full_dict)
+    else:
+        precision, recall, f1 = get_f1(pred_tags_lst=all_preds, golden_tags_lst=valid_y)
     return precision, recall, f1
 
 
@@ -175,7 +211,7 @@ def train_model(epoch, model, optimizer,
                 train_x, train_y,
                 valid_x, valid_y,
                 test_x, test_y,
-                ix2label, best_valid, test_f1_score):
+                full_dict, best_valid, test_f1_score):
     model.train()
     opt = model.opt
 
@@ -204,27 +240,42 @@ def train_model(epoch, model, optimizer,
             ))
             start_time = time.time()
 
-    dev_precision, dev_recall, dev_f1_score = eval_model(model, valid_x, valid_y, ix2label, opt)
-    logging.info("Epoch={} iter={} lr={:.6f} train_loss={:.6f} valid_acc={:.6f}".format(
-        epoch, cnt, optimizer.param_groups[0]['lr'], total_loss, dev_f1_score))
+    dev_precision, dev_recall, dev_f1_score = eval_model(model, valid_x, valid_y, full_dict, opt)
+    logging.info("Epoch={} iter={} lr={:.6f} train_loss={:.6f} valid_f1={:.6f} valid_p={:.6f} valid_r={:.6f}".format(
+        epoch, cnt, optimizer.param_groups[0]['lr'], total_loss, dev_f1_score, dev_precision, dev_recall))
 
     if dev_f1_score > best_valid:
-        torch.save(
+        saving_dict = {
+            'state_dict': model.state_dict(),
+            'param':
             {
-                'state_dict': model.state_dict(),
-                'param':
-                {
-                    'input_size': model.input_size,
-                    'hidden_size': model.hidden_size,
-                    'num_tags': model.num_tags,
-                    'opt': model.opt,
-                    'use_cuda': model.use_cuda
-                }
-            },
-            os.path.join(opt.model, 'model.pkl'
-        ))
+                'input_size': model.input_size,
+                'hidden_size': model.hidden_size,
+                'opt': model.opt,
+                'use_cuda': model.use_cuda
+            }
+        }
+
+        if hasattr(model, 'num_tags'):
+            saving_dict['param']['num_tags'] = model.num_tags
+        ''' Store param for seq2seq model: sos_id, eos_id, token2id, id2token '''
+        if hasattr(model, 'tgt_vocb_size'):
+            saving_dict['param']['tgt_vocb_size'] = model.tgt_vocb_size
+        if hasattr(model, 'sos_id'):
+            saving_dict['param']['sos_id'] = model.sos_id
+        if hasattr(model, 'eos_id'):
+            saving_dict['param']['eos_id'] = model.eos_id
+        if hasattr(model, 'token2id'):
+            saving_dict['param']['token2id'] = model.token2id
+        if hasattr(model, 'id2token'):
+            saving_dict['param']['id2token'] = model.id2token
+
+        torch.save(
+            saving_dict,
+            os.path.join(opt.model, 'model.pkl')
+        )
         best_valid = dev_f1_score
-        test_precision, test_recall, test_f1_score = eval_model(model, test_x, test_y, ix2label, opt)
+        test_precision, test_recall, test_f1_score = eval_model(model, test_x, test_y, full_dict, opt)
         logging.info("New record achieved!")
         logging.info("Epoch={} iter={} lr={:.6f} test_precision={:.6f}, test_recall={:.6f}, test_f1={:.6f}".format(
             epoch, cnt, optimizer.param_groups[0]['lr'], test_precision, test_recall, test_f1_score))
@@ -236,6 +287,7 @@ def create_one_batch(x, y, use_cuda=False):
     lens = [len(xi) for xi in x]
     max_len = max(lens)  # useless for current situation
 
+    # print('========== DEBUG ====== y: {} * {} * {}'.format(len(y), len(y[0]), len(y[0][0])))
     batch_x = torch.LongTensor(x)
     batch_y = torch.LongTensor(y)
     if use_cuda:
@@ -316,7 +368,7 @@ def one_turn_classification(opt):
                 train_x=train_x, train_y=train_y,
                 valid_x=dev_x, valid_y=dev_y,
                 test_x=test_x, test_y=test_y,
-                ix2label=full_dict, best_valid=best_valid, test_f1_score=test_result
+                full_dict=full_dict, best_valid=best_valid, test_f1_score=test_result
             )
             if opt.lr_decay > 0:
                 optimizer.param_groups[0]['lr'] *= opt.lr_decay  # there is only one group, so use index 0
@@ -372,10 +424,161 @@ def history_based_classification(opt):
         dev_x, dev_y = create_batches(dev_input, dev_label, opt.batch_size, use_cuda=use_cuda)
         test_x, test_y = create_batches(test_input, test_label, opt.batch_size, use_cuda=use_cuda)
 
-        input_size = len(train_input[0])
+        input_size = len(train_input[0][0])
         num_tags = len(train_label[0])
-        classifier = MultiLableClassifyLayer(input_size=input_size, hidden_size=opt.hidden_dim, num_tags=num_tags,
-                                             opt=opt, use_cuda=use_cuda)
+        classifier = LSTM_MultiLabelClassifier(
+            input_size=input_size, hidden_size=opt.hidden_dim, num_tags=num_tags,
+            opt=opt, use_cuda=use_cuda
+        )
+        # classifier = LSTM_MultiLabelClassifier()
+        optimizer = optim.Adam(classifier.parameters())
+
+        best_valid, test_result = -1e8, -1e8
+        for epoch in range(opt.max_epoch):
+            best_valid, test_result = train_model(
+                epoch=epoch,
+                model=classifier,
+                optimizer=optimizer,
+                train_x=train_x, train_y=train_y,
+                valid_x=dev_x, valid_y=dev_y,
+                test_x=test_x, test_y=test_y,
+                full_dict=full_dict, best_valid=best_valid, test_f1_score=test_result
+            )
+            if opt.lr_decay > 0:
+                optimizer.param_groups[0]['lr'] *= opt.lr_decay  # there is only one group, so use index 0
+            # logging.info('Total encoder time: {:.2f}s'.format(model.eval_time / (epoch + 1)))
+            # logging.info('Total embedding time: {:.2f}s'.format(model.emb_time / (epoch + 1)))
+            # logging.info('Total classify time: {:.2f}s'.format(model.classify_time / (epoch + 1)))
+        logging.info("best_valid_f1: {:.6f}".format(best_valid))
+        logging.info("test_f1: {:.6f}".format(test_result))
+
+
+def transform_label_into_sequence_style(labels, full_dict, sos_token, eos_token, pad_token):
+    ret = []
+    token_order = ['diaact', 'inform_slots', 'request_slots']
+    tgt_token2id = full_dict['tgt_token2id']
+
+    def slot2tokens(k, v):
+        tokens = []
+        if type(v) == list:
+            for value in v:
+                tokens.append(k)
+                tokens.append(value)
+        else:
+            tokens = [k, v]
+        return tokens
+
+    def tokens2ids(tokens, tgt_token2id):
+        return [tgt_token2id[x] for x in tokens]
+    #
+    # def ids2one_hots(ids):
+    #     ret = []
+    #     for id in ids:
+    #         tmp_v = [0 for i in range(len(tgt_token2id))]
+    #         tmp_v[id] = 1
+    #         ret.append(ret)
+    #     return ret
+
+    def append_pad(all_labels):
+        ret = []
+        max_len = max([len(label) for label in all_labels])
+        for label in all_labels:
+            label.extend([pad_token for i in range(max_len - len(label))])
+            ret.append(label)
+        return ret
+
+    all_action_token = []
+    for label_v in labels:
+        action_dict = vector2action(label_v, full_dict)
+        # print('=======DEBUG======= action dict: {}'.format(action_dict))
+        action_tokens = [sos_token]
+        for token_type in token_order:
+            # get and pad token
+            action_tokens.extend(slot2tokens(token_type, action_dict[token_type]))
+        action_tokens.append(eos_token)
+        all_action_token.append(action_tokens)
+
+    all_action_token = append_pad(all_action_token)
+    # print('========== DEBUG ========= all_action_token', all_action_token[:3])
+    for action_tokens in all_action_token:
+        # print('=======DEBUG======= action_tokens: {}'.format(action_tokens))
+        action_token_ids = tokens2ids(action_tokens, tgt_token2id)
+        # action_token_vectors = ids2one_hots(action_token_ids)
+        ret.append(action_token_ids)
+    # print('========== DEBUG ========= all_action_token_id', ret[:3])
+    return ret
+
+
+def seq2seq_action_generation(opt, single_turn_history=False):
+    use_cuda = opt.gpu >= 0 and torch.cuda.is_available()
+    with open(opt.train_path, 'r') as train_file, \
+            open(opt.dev_path, 'r') as dev_file, \
+            open(opt.test_path, 'r') as test_file, \
+            open(opt.dict_path, 'r') as dict_file:
+        logging.info('Start loading data from:\ntrain:{}\ndev:{}\ntest:{}\ndict:{}\n'.format(
+            opt.train_path, opt.dev_path, opt.test_path, opt.dict_path
+        ))
+        train_data = json.load(train_file)
+        dev_data = json.load(dev_file)
+        test_data = json.load(test_file)
+        full_dict = json.load(dict_file)
+
+        logging.info('Finish data loading.')
+        print('Finish  data loading!!!!!!!!!!')
+
+        # unpack data
+        train_input, train_label, train_turn_id = zip(*train_data)
+        dev_input, dev_label, dev_turn_id = zip(*dev_data)
+        test_input, test_label, test_turn_id = zip(*test_data)
+
+        # stack history
+        if not single_turn_history:
+            train_input = transform_data_into_history_style(train_input, train_turn_id)
+            dev_input = transform_data_into_history_style(dev_input, dev_turn_id)
+            test_input = transform_data_into_history_style(test_input, test_turn_id)
+
+        # gen tgt dict
+        sos_token = '<SOS>'
+        eos_token = '<EOS>'
+        pad_token = '<PAD>'
+        tgt_token2id_dict = {}
+        tgt_id2token_dict = {}
+        for token in (
+            [pad_token, sos_token, eos_token, 'diaact', 'inform_slots', 'request_slots'] +
+            full_dict['user_inform_slot2id'].keys() +
+            full_dict['user_request_slot2id'].keys() +
+            full_dict['diaact2id'].keys()
+        ):
+            if token not in tgt_token2id_dict:
+                t_id = len(tgt_token2id_dict)
+                tgt_token2id_dict[token] = t_id
+                tgt_id2token_dict[t_id] = token
+        full_dict['tgt_token2id'] = tgt_token2id_dict
+        full_dict['tgt_id2token'] = tgt_id2token_dict
+
+        # convert label to sequence
+        train_label = transform_label_into_sequence_style(train_label, full_dict, sos_token, eos_token, pad_token)
+        dev_label = transform_label_into_sequence_style(dev_label, full_dict, sos_token, eos_token, pad_token)
+        test_label = transform_label_into_sequence_style(test_label, full_dict, sos_token, eos_token, pad_token)
+
+        # create batches
+        train_x, train_y = create_batches(train_input, train_label, opt.batch_size, use_cuda=use_cuda)
+        dev_x, dev_y = create_batches(dev_input, dev_label, opt.batch_size, use_cuda=use_cuda)
+        test_x, test_y = create_batches(test_input, test_label, opt.batch_size, use_cuda=use_cuda)
+        #
+        # for i in range(3):
+        #     print('========= DEBUG =========', train_x[0][i])
+
+        input_size = len(train_input[0][0])
+
+        classifier = Seq2SeqActionGenerator(
+            input_size=input_size, hidden_size=opt.hidden_dim, n_layers=opt.depth,
+            tgt_vocb_size=len(tgt_token2id_dict), max_len=opt.max_len, dropout_p=opt.dropout,
+            sos_id=tgt_token2id_dict[sos_token], eos_id=tgt_token2id_dict[eos_token],
+            token2id=tgt_token2id_dict, id2token=tgt_id2token_dict, opt=opt,
+            bidirectional=opt.direction == 'bi', use_attention=opt.use_attention, input_variable_lengths=False,
+            use_cuda=use_cuda
+        )
 
         optimizer = optim.Adam(classifier.parameters())
 
@@ -388,7 +591,7 @@ def history_based_classification(opt):
                 train_x=train_x, train_y=train_y,
                 valid_x=dev_x, valid_y=dev_y,
                 test_x=test_x, test_y=test_y,
-                ix2label=full_dict, best_valid=best_valid, test_f1_score=test_result
+                full_dict=full_dict, best_valid=best_valid, test_f1_score=test_result
             )
             if opt.lr_decay > 0:
                 optimizer.param_groups[0]['lr'] *= opt.lr_decay  # there is only one group, so use index 0
@@ -397,75 +600,6 @@ def history_based_classification(opt):
             # logging.info('Total classify time: {:.2f}s'.format(model.classify_time / (epoch + 1)))
         logging.info("best_valid_f1: {:.6f}".format(best_valid))
         logging.info("test_f1: {:.6f}".format(test_result))
-
-
-def main():
-    cmd = argparse.ArgumentParser()
-
-    # running mode
-    cmd.add_argument('-otc', '--one_turn_c', action='store_true', help='run train and test at the same time')
-    # cmd.add_argument('-tt', '--train_and_test', action='store_true', help='run train and test at the same time')
-
-    # define path
-    cmd.add_argument('--train_path', help='the path to the training file.', default= '{0}TaskOrientedDialogue/data/TC-bot/data/{1}/{1}.train.json'.format(PROJECT_DIR, DATA_MARK))
-    cmd.add_argument('--dev_path', help='the path to the validation file.', default='{0}TaskOrientedDialogue/data/TC-bot/data/{1}/{1}.dev.json'.format(PROJECT_DIR, DATA_MARK))
-    cmd.add_argument('--test_path', help='the path to the testing file.', default='{0}TaskOrientedDialogue/data/TC-bot/data/{1}/{1}.test.json'.format(PROJECT_DIR, DATA_MARK))
-    cmd.add_argument('--dict_path', help='the path to the full dict file.', default='{0}TaskOrientedDialogue/data/TC-bot/data/{1}/{1}.dict.json'.format(PROJECT_DIR, DATA_MARK))
-    cmd.add_argument("--model", help="path to save model", default='{0}TaskOrientedDialogue/data/TC-bot/data/{1}/'.format(PROJECT_DIR, DATA_MARK))
-    # cmd.add_argument('--train_path', required=True, help='the path to the training file.', default= '{0}/TaskOrientedDialogue/data/TC-bot/data/{1}/{1}.train.json'.format(PROJECT_DIR, DATA_MARK))
-    # cmd.add_argument('--dev_path', required=True, help='the path to the validation file.', default='{0}/TaskOrientedDialogue/data/TC-bot/data/{1}/{1}.dev.json'.format(PROJECT_DIR, DATA_MARK))
-    # cmd.add_argument('--test_path', required=True, help='the path to the testing file.', default='{0}/TaskOrientedDialogue/data/TC-bot/data/{1}/{1}.test.json'.format(PROJECT_DIR, DATA_MARK))
-    # cmd.add_argument('--dict_path', required=True, help='the path to the full dict file.', default='{0}/TaskOrientedDialogue/data/TC-bot/data/{1}/{1}.dict.json'.format(PROJECT_DIR, DATA_MARK))
-    # cmd.add_argument("--model", required=True, help="path to save model", default='{0}/TaskOrientedDialogue/data/TC-bot/data/{1}/'.format(PROJECT_DIR, DATA_MARK))
-    cmd.add_argument('--output', help='The path to the output file.', default='{0}TaskOrientedDialogue/data/TC-bot/data/{1}/{1}.output.json'.format(PROJECT_DIR, DATA_MARK))
-    # cmd.add_argument("--script", required=True, help="The path to the evaluation script: ./eval/conlleval.pl")
-    # cmd.add_argument("--word_embedding", type=str, default='',
-    #                  help="pass a path to word vectors from file(not finished), empty string to load from pytorch-nlp")
-
-    # environment setting
-    cmd.add_argument('--seed', default=1, type=int, help='the random seed.')
-    cmd.add_argument('--gpu', default=-1, type=int, help='use id of gpu, -1 if cpu.')
-    cmd.add_argument('--debug', action='store_true', help='run in debug mode')
-
-    # define detail
-    cmd.add_argument('--encoder', default='lstm', choices=['lstm'],
-                     help='the type of encoder: valid options=[lstm]')
-    cmd.add_argument('--classifier', default='vanilla', choices=['vanilla'],
-                     help='The type of classifier: valid options=[vanilla]')
-    cmd.add_argument('--optimizer', default='adam', choices=['sgd', 'adam'],
-                     help='the type of optimizer: valid options=[sgd, adam]')
-
-    cmd.add_argument("--batch_size", "--batch", type=int, default=64, help='the batch size.')
-    cmd.add_argument("--hidden_dim", "--hidden", type=int, default=128, help='the hidden dimension.')
-    cmd.add_argument("--max_epoch", type=int, default=30, help='the maximum number of iteration.')
-    cmd.add_argument("--word_dim", type=int, default=300, help='the input dimension.')
-    cmd.add_argument("--dropout", type=float, default=0.5, help='the dropout rate')
-    cmd.add_argument("--depth", type=int, default=2, help='the depth of lstm')
-    cmd.add_argument("--lr", type=float, default=0.01, help='the learning rate.')
-    cmd.add_argument("--lr_decay", type=float, default=0, help='the learning rate decay.')
-    cmd.add_argument("--clip_grad", type=float, default=5, help='the tense of clipped grad.')
-
-    opt = cmd.parse_args()
-
-    print(opt)
-    torch.manual_seed(opt.seed)
-    random.seed(opt.seed)
-    if opt.gpu >= 0:
-        torch.cuda.set_device(opt.gpu)
-        if opt.seed > 0:
-            torch.cuda.manual_seed(opt.seed)
-
-    if opt.one_turn_c:
-        print('Start one_turn_classification')
-        one_turn_classification(opt)
-
-    # setting logging
-    # DEBUG = False
-    # DEBUG = True
-    # if DEBUG or opt.debug:
-    #     logging.basicConfig(format='%(asctime)-15s %(levelname)s: %(message)s', level=logging.DEBUG)
-    # else:
-    #     logging.basicConfig(format='%(asctime)-15s %(levelname)s: %(message)s', level=logging.INFO)
 
 
 if __name__ == '__main__':

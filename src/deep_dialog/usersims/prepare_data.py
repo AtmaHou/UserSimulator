@@ -4,14 +4,19 @@ import json
 import re
 import sys
 import os
-sys.path.append("..")
-import dialog_config
+try:
+    from deep_dialog import dialog_config
+except:
+    sys.path.append("..")
+    import dialog_config
 import logging
 import copy
 
 LOG_PATH = dialog_config.TRAIN_LOG_PATH
 EXTRACTED_LOG_DATA_PATH = dialog_config.EXTRACTED_LOG_DATA_PATH
-EXPR_DIR = dialog_config.EXPR_DIR
+
+DATA_MARK = dialog_config.DATA_MARK[0]  # select basic
+EXPR_DIR = dialog_config.EXPR_DIR[DATA_MARK]
 
 DEBUG = False
 # DEBUG = True
@@ -251,8 +256,8 @@ def create_3state_v(active_set, negative_set, reference):
     return v
 
 
-def new_state(user_goal, state_v_component, state_dict, last_sys_turn, user_inform_slot2id, user_request_slot2id,
-                      sys_inform_slot2id, sys_request_slot2id, diaact2id, dialog_status):
+def update_state_dict_vector(user_goal, state_v_component, state_dict, last_sys_turn, user_inform_slot2id, user_request_slot2id,
+                             sys_inform_slot2id, sys_request_slot2id, diaact2id, dialog_status):
     state_v = []
     new_state_dict = copy.deepcopy(state_dict)
     if not last_sys_turn:  # for first turn
@@ -280,6 +285,34 @@ def new_state(user_goal, state_v_component, state_dict, last_sys_turn, user_info
     for v_name in state_v_component:
         state_v.extend(state_dict[v_name])
     return state_v, new_state_dict
+
+
+def update_state_dict_slots(current_speaker, turn, user_goal, old_state_dict):
+    state_dict = copy.deepcopy(old_state_dict)
+    if current_speaker == 'sys':
+        for slot, value in turn['inform_slots'].items():
+            # update rest slot
+            if slot in state_dict['rest_slots']:
+                state_dict['rest_slots'].remove(slot)
+            # update consistent slot and inconsistent slot
+            # Inconsistency should compare to inform slot,
+            if slot in user_goal['inform_slots']:
+                if value != user_goal['inform_slots'][slot] and slot not in state_dict['inconsistent_slots']:
+                    state_dict['inconsistent_slots'].append(slot)
+                    if slot in state_dict['consistent_slots']:
+                        state_dict['consistent_slots'].remove(slot)
+                elif value == user_goal['inform_slots'][slot] and slot not in state_dict['consistent_slots']:
+                    state_dict['consistent_slots'].append(slot)
+                    if slot in state_dict['inconsistent_slots']:
+                        state_dict['inconsistent_slots'].remove(slot)
+    elif current_speaker == 'usr':
+        for slot in turn['inform_slots'].keys():
+            if slot not in state_dict['history_slots']:
+                state_dict['history_slots'].append(slot)
+    else:
+        print('ERROR: Wrong mark for speaker')
+        raise RuntimeError
+    return state_dict
 
 
 def cook_one_dialogue(dialogue_item, user_inform_slot2id, user_request_slot2id,
@@ -321,26 +354,28 @@ def cook_one_dialogue(dialogue_item, user_inform_slot2id, user_request_slot2id,
     for ind, turn in enumerate(turns):
         if turn['speaker'] == 'sys':
             last_sys_turn = turn
-            for slot, value in turn['inform_slots'].items():
-                # update rest slot
-                if slot in state_dict['rest_slots']:
-                    state_dict['rest_slots'].remove(slot)
-                # update consistent slot and inconsistent slot
-                # Inconsistency should compare to inform slot,
-                if slot in user_goal['inform_slots']:
-                    if value != user_goal['inform_slots'][slot] and slot not in state_dict['inconsistent_slots']:
-                        state_dict['inconsistent_slots'].append(slot)
-                        if slot in state_dict['consistent_slots']:
-                            state_dict['consistent_slots'].remove(slot)
-                    elif value == user_goal['inform_slots'][slot] and slot not in state_dict['consistent_slots']:
-                        state_dict['consistent_slots'].append(slot)
-                        if slot in state_dict['inconsistent_slots']:
-                            state_dict['inconsistent_slots'].remove(slot)
-
+            state_dict = update_state_dict_slots(
+                current_speaker='sys', turn=turn, user_goal=user_goal, old_state_dict=state_dict
+            )
+            # for slot, value in turn['inform_slots'].items():
+            #     # update rest slot
+            #     if slot in state_dict['rest_slots']:
+            #         state_dict['rest_slots'].remove(slot)
+            #     # update consistent slot and inconsistent slot
+            #     # Inconsistency should compare to inform slot,
+            #     if slot in user_goal['inform_slots']:
+            #         if value != user_goal['inform_slots'][slot] and slot not in state_dict['inconsistent_slots']:
+            #             state_dict['inconsistent_slots'].append(slot)
+            #             if slot in state_dict['consistent_slots']:
+            #                 state_dict['consistent_slots'].remove(slot)
+            #         elif value == user_goal['inform_slots'][slot] and slot not in state_dict['consistent_slots']:
+            #             state_dict['consistent_slots'].append(slot)
+            #             if slot in state_dict['inconsistent_slots']:
+            #                 state_dict['inconsistent_slots'].remove(slot)
 
         elif turn['speaker'] == 'usr':
             # build state vector and label
-            state_v, state_dict = new_state(
+            state_v, state_dict = update_state_dict_vector(
                 user_goal, state_v_component, state_dict, last_sys_turn,
                 user_inform_slot2id, user_request_slot2id,
                 sys_inform_slot2id, sys_request_slot2id, diaact2id,
@@ -350,14 +385,17 @@ def cook_one_dialogue(dialogue_item, user_inform_slot2id, user_request_slot2id,
                 print('Error:Mulit-diaact')
                 print(turn)
                 raise RuntimeError
-            for slot in turn['inform_slots'].keys():
-                if slot not in state_dict['history_slots']:
-                    state_dict['history_slots'].append(slot)
+            state_dict = update_state_dict_slots(
+                current_speaker='usr', turn=turn, user_goal=user_goal, old_state_dict=state_dict
+            )
+            # for slot in turn['inform_slots'].keys():
+            #     if slot not in state_dict['history_slots']:
+            #         state_dict['history_slots'].append(slot)
 
             label = create_one_hot_v([turn['diaact']], diaact2id) + \
                     create_one_hot_v(turn['inform_slots'].keys(), user_inform_slot2id) + \
                     create_one_hot_v(turn['request_slots'].keys(), user_request_slot2id)
-            # Debug:
+
             diaact_v = label[: len(diaact2id)]
             if sum(diaact_v) > 1 or sum(diaact_v) <= 0:
                 print("ERROR: Wrong diaact")

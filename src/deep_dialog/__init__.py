@@ -1,1 +1,1 @@
-#
+from dialog_config import *
