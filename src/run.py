@@ -34,6 +34,7 @@ from deep_dialog.dialog_system import DialogManager, text_to_dict
 from deep_dialog.agents import AgentCmd, InformAgent, RequestAllAgent, RandomAgent, EchoAgent, RequestBasicsAgent, AgentDQN
 from deep_dialog.usersims import RuleSimulator
 from deep_dialog.usersims.usersim_supervise import SuperviseUserSimulator
+from deep_dialog.usersims.usersim_seq2seq import Seq2SeqUserSimulator
 
 from deep_dialog import dialog_config
 from deep_dialog.dialog_config import *
@@ -66,7 +67,7 @@ if __name__ == "__main__":
     parser.add_argument('--intent_err_prob', dest='intent_err_prob', default=0.05, type=float, help='the intent err probability')
     
     parser.add_argument('--agt', dest='agt', default=0, type=int, help='Select an agent: 0 for a command line input, 1-6 for rule based agents')
-    parser.add_argument('--usr', dest='usr', default=2, type=int, help='Select a user simulator. 0 is a Frozen user simulator. 1 Rule based. 2 Supervised User')
+    parser.add_argument('--usr', dest='usr', default=2, type=int, help='Select a user simulator. 0 is a Frozen user simulator. 1 Rule based. 2 Supervised User 3 Seq2Seq User')
     
     parser.add_argument('--epsilon', dest='epsilon', type=float, default=0, help='Epsilon to determine stochasticity of epsilon-greedy agent policies')
     
@@ -200,6 +201,8 @@ elif usr == 1:
     user_sim = RuleSimulator(movie_dictionary, act_set, slot_set, goal_set, usersim_params)
 elif usr == 2:
     user_sim = SuperviseUserSimulator(movie_dictionary, act_set, slot_set, goal_set, usersim_params)
+elif usr == 3:
+    user_sim = Seq2SeqUserSimulator(movie_dictionary, act_set, slot_set, goal_set, usersim_params)
 
 ################################################################################
 #    Add your user simulator here

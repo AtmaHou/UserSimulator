@@ -43,7 +43,8 @@ EXPR_DIR = dialog_config.EXPR_DIR[DATA_MARK]
 
 class SuperviseUserSimulator(RuleSimulator):
     def __init__(self, movie_dict=None, act_set=None, slot_set=None, start_set=None, params=None, use_cuda=False,
-                 model_path=EXPR_DIR + 'model.pkl', dict_path=EXPR_DIR + 'extracted_no_nlg_no_nlu.dict.json'):
+                 model_path=EXPR_DIR + 'model.pkl', dict_path=EXPR_DIR + 'extracted_no_nlg_no_nlu.dict.json',
+                 rule_first_turn=False):
         print('Start supervise user simulator')
         # super(SuperviseUserSimulator, self).__init__(movie_dict, act_set, slot_set, start_set, params)
         self.movie_dict = movie_dict
@@ -51,6 +52,7 @@ class SuperviseUserSimulator(RuleSimulator):
         self.slot_set = slot_set
         self.start_set = start_set
 
+        self.rule_first_turn = rule_first_turn
         self.max_turn = params['max_turn']
         self.slot_err_probability = params['slot_err_probability']
         self.slot_err_mode = params['slot_err_mode']
@@ -121,7 +123,18 @@ class SuperviseUserSimulator(RuleSimulator):
         state_v = []
         for v_name in self.state_v_component:
             state_v.extend(self.state_dict[v_name])
-        user_action = self._sample_action()
+        if self.rule_first_turn:
+            user_action = self._sample_action()
+        else:
+            pred_action = self.predict_action(state_representation)
+            self.fill_slot_value(pred_action)
+            response_action = {}
+            response_action['diaact'] = self.state['diaact']
+            response_action['inform_slots'] = self.state['inform_slots']
+            response_action['request_slots'] = self.state['request_slots']
+            response_action['turn'] = self.state['turn']
+            response_action['nl'] = ""
+            user_action = response_action
         assert (self.episode_over != 1), ' but we just started'
         return user_action
 

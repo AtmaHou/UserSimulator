@@ -1,5 +1,4 @@
 # coding: utf-8
-
 """
 Created on June 5, 2018
 
@@ -11,6 +10,7 @@ a action classify based user simulator
 
 @author: atma
 """
+from __future__ import print_function
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -35,23 +35,24 @@ from .usersim_rule import RuleSimulator
 from .nn_models import Seq2SeqActionGenerator
 from .action_generation import *
 from .prepare_data import *
+import torch
 
 DATA_MARK = dialog_config.DATA_MARK[2]
 EXPR_DIR = dialog_config.EXPR_DIR[DATA_MARK]
 
 
-class SuperviseUserSimulator(RuleSimulator):
+class Seq2SeqUserSimulator(RuleSimulator):
     def __init__(self, movie_dict=None, act_set=None, slot_set=None, start_set=None, params=None, use_cuda=False,
                  model_path=EXPR_DIR + 'model.pkl', dict_path=EXPR_DIR + '{0}.dict.json'.format(DATA_MARK),
                  rule_first_turn=False):
-        print('Start supervise user simulator')
+        print('Start Seq2Seq user simulator')
         # super(SuperviseUserSimulator, self).__init__(movie_dict, act_set, slot_set, start_set, params)
         self.movie_dict = movie_dict
         self.act_set = act_set
         self.slot_set = slot_set
         self.start_set = start_set
 
-        self.rule_first_turn= rule_first_turn
+        self.rule_first_turn = rule_first_turn
         self.max_turn = params['max_turn']
         self.slot_err_probability = params['slot_err_probability']
         self.slot_err_mode = params['slot_err_mode']
@@ -69,12 +70,13 @@ class SuperviseUserSimulator(RuleSimulator):
             saved_model = torch.load(reader)
             # print(saved_model.keys())
             param = saved_model['param']
-            print(param)
+            self.token2id = param['token2id']
+            self.id2token = param['id2token']
             self.classifier = Seq2SeqActionGenerator(
                 input_size=param['input_size'], hidden_size=param['opt'].hidden_dim, n_layers=param['opt'].depth,
-                tgt_vocb_size=len(param['token2id']), max_len=param['opt'].max_len, dropout_p=param['opt'].dropout,
+                tgt_vocb_size=len(self.token2id), max_len=param['opt'].max_len, dropout_p=param['opt'].dropout,
                 sos_id=param['sos_id'], eos_id=param['eos_id'],
-                token2id=param['token2id'], id2token=param['id2token'], opt=param['opt'],
+                token2id=self.token2id, id2token=self.id2token, opt=param['opt'],
                 bidirectional=param['opt'].direction == 'bi', use_attention=param['opt'].use_attention,
                 input_variable_lengths=False,
                 use_cuda=use_cuda
@@ -83,7 +85,7 @@ class SuperviseUserSimulator(RuleSimulator):
         with open(dict_path, 'r') as reader:
             self.full_dict = json.load(reader)
         self.state_dict = {}
-        self.state_v_lst = []
+        self.state_v_history = []
 
     def initialize_episode(self):
         """ Initialize a new episode (dialog)
@@ -131,6 +133,11 @@ class SuperviseUserSimulator(RuleSimulator):
         state_v = []
         for v_name in self.state_v_component:
             state_v.extend(self.state_dict[v_name])
+
+        self.state_v_history = [state_v] * 5  # pad empty history
+        # print('DEBUG state v', state_v, '\nDEBUG v history', self.state_v_history)
+
+        state_representation = self.get_state_representation()
         if self.rule_first_turn:
             user_action = self._sample_action()
         else:
@@ -146,9 +153,17 @@ class SuperviseUserSimulator(RuleSimulator):
         assert (self.episode_over != 1), ' but we just started'
         return user_action
 
+    def get_state_representation(self):
+        s_r = self.state_v_history[:5]
+        s_r = [s_r]  # batch size as 1
+        s_r = torch.LongTensor(s_r)
+        # print('DEBUG', self.state_v_history, '\nDEBUG s_r', s_r)
+        return s_r
+
     def predict_action(self, state_representation):
         self.classifier.eval()
-        output, loss = self.classifier.forward(state_representation)
+        output = self.classifier.forward(state_representation)[0]  # batch size is 1
+        output = gen2vector(output, self.id2token, self.full_dict)
         pred_action = vector2action(output, self.full_dict)
         return pred_action
 
@@ -224,7 +239,7 @@ class SuperviseUserSimulator(RuleSimulator):
                 current_speaker='sys', turn=last_sys_turn, user_goal=self.goal, old_state_dict=self.state_dict
             )
             # update state_dict: vector
-            state_representation, self.state_dict = update_state_dict_vector(
+            state_v, self.state_dict = update_state_dict_vector(
                 user_goal=self.goal,
                 state_v_component=self.state_v_component,
                 state_dict=self.state_dict,
@@ -236,6 +251,8 @@ class SuperviseUserSimulator(RuleSimulator):
                 diaact2id=self.full_dict['diaact2id'],
                 dialog_status=0,
             )
+            self.state_v_history = [state_v] + self.state_v_history  # add current state to the front
+            state_representation = self.get_state_representation()
             pred_action = self.predict_action(state_representation)
             self.fill_slot_value(pred_action)
             response_action = {}

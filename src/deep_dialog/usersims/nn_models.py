@@ -138,17 +138,17 @@ class LSTM_MultiLabelClassifier(nn.Module):
         self.use_cuda = use_cuda
         self.opt = opt
 
-    def forward(self, batch_x, batch_y):
+    def forward(self, batch_x, batch_y=None):
         batch_size = batch_x.size(0)
-        batch_x, batch_y = Variable(batch_x.float()), Variable(batch_y.float())
-        # print('DEBUG!!!!!!!!!!!!!!!!', batch_x.size(), batch_y.size())
+        batch_x = Variable(batch_x.float())
         output, hidden_and_cell = self.encoder(batch_x)
         batch_last_hidden = output[:, -1, :]
-        # print('DEBUG LSTM outputs:', output.size())
-        # print('DEBUG LSTM hidden:', hidden_and_cell[0].size())
-        # print('DEBUG LSTM batch_last_hidden:', batch_last_hidden.size())
-        output, loss = self.classify_layer(batch_last_hidden, batch_y)
-        return output, loss
+        Variable(batch_y.float())
+        if self.training:
+            output, loss = self.classify_layer(batch_last_hidden, batch_y)
+            return output, loss
+        else:
+            return output
 
 
 class StateEncoder(BaseRNN):
@@ -221,7 +221,7 @@ class DecoderRNN(BaseRNN):
     def __init__(self, vocab_size, max_len, hidden_size,
             sos_id, eos_id,
             n_layers=1, rnn_cell='gru', bidirectional=False,
-            input_dropout_p=0, dropout_p=0, use_attention=False):
+            input_dropout_p=0, dropout_p=0, use_attention=False, use_cuda=False):
         super(DecoderRNN, self).__init__(vocab_size, max_len, hidden_size,
                 input_dropout_p, dropout_p,
                 n_layers, rnn_cell)
@@ -229,6 +229,7 @@ class DecoderRNN(BaseRNN):
         self.bidirectional_encoder = bidirectional
         self.rnn = self.rnn_cell(hidden_size, hidden_size, n_layers, batch_first=True, dropout=dropout_p)
 
+        self.use_cuda = use_cuda
         self.output_size = vocab_size
         self.max_length = max_len
         self.use_attention = use_attention
@@ -358,7 +359,7 @@ class DecoderRNN(BaseRNN):
             if teacher_forcing_ratio > 0:
                 raise ValueError("Teacher forcing has to be disabled (set 0) when no inputs is provided.")
             inputs = torch.LongTensor([self.sos_id] * batch_size).view(batch_size, 1)
-            if torch.cuda.is_available():
+            if torch.cuda.is_available() and self.use_cuda:
                 inputs = inputs.cuda()
             max_length = self.max_length
         else:
@@ -399,11 +400,12 @@ class Seq2seq(nn.Module):
 
     """
 
-    def __init__(self, encoder, decoder, decode_function=F.log_softmax):
+    def __init__(self, encoder, decoder, decode_function=F.log_softmax, use_cuda=False):
         super(Seq2seq, self).__init__()
         self.encoder = encoder
         self.decoder = decoder
         self.decode_function = decode_function
+        self.use_cuda = use_cuda
 
     def flatten_parameters(self):
         self.encoder.rnn.flatten_parameters()
@@ -457,50 +459,30 @@ class Seq2SeqActionGenerator(nn.Module):
             vocab_size=tgt_vocb_size, max_len=max_len, hidden_size=hidden_size * 2 if bidirectional else hidden_size,
             eos_id=eos_id, sos_id=sos_id, n_layers=n_layers, rnn_cell=opt.decoder,
             bidirectional=bidirectional, input_dropout_p=dropout_p, dropout_p=dropout_p, use_attention=use_attention,
+            use_cuda=self.use_cuda,
         )
         self.seq2seq = Seq2seq(self.encoder, self.decoder)
         if use_cuda:
             self.seq2seq.cuda()
 
-    def forward(self, batch_x, batch_y, teacher_forcing_ratio=0, output_token=False):
+    def forward(self, batch_x, batch_y=None, teacher_forcing_ratio=0, output_token=False):
         input_var = batch_x if type(batch_x) == Variable else Variable(batch_x)
-        batch_y = batch_y if type(batch_y) == Variable else Variable(batch_y)
-
         input_var = input_var.float()
-        # batch_y = batch_y.float()
-        # print('======== DEBUG ========== batch_y', batch_y)
+        if batch_y:
+            batch_y = batch_y if type(batch_y) == Variable else Variable(batch_y)
 
         decoder_outputs, decoder_hidden, other = self.seq2seq(input_variable=input_var, target_variable=batch_y,
                                                               teacher_forcing_ratio=teacher_forcing_ratio)
-        ''' prepare var for loss computing '''
-        target_var = []
-        for label in batch_y:
-            tmp_var = []
-            for id in label:
-                token_v = [0 for i in range(len(self.token2id))]
-                token_v[id] = 1
-                tmp_var.append(token_v)
-            target_var.append(tmp_var)
-        target_var = torch.LongTensor(target_var)
-        '''computing loss '''
-        # loss = Perplexity()
-        loss = NLLLoss()
-
-        # print('======== debug ======== target_var', target_var.shape)
-        # print('======== debug ======== output', len(decoder_outputs), decoder_outputs[0].shape)
-        for step, step_output in enumerate(decoder_outputs):
-            batch_size = batch_x.size(0)
-            # print('======== debug ======== target_var', target_var[:, step + 1].shape, target_var[:, step + 1])
-            # print('======== debug ======== step output', step, step_output.shape, step_output)
-            # print('======== debug ======== batch size and viewed step', batch_size,
-            # step_output.contiguous().view(batch_size, -1).shape, step_output.contiguous().view(batch_size, -1))
-            ''' Select out current step's token. EOS is not included in step_output, so + 1 step for target '''
-            pred_token_distribute_batch = step_output.contiguous().view(batch_size, -1)
-            target_token_id_v_batch = batch_y[:, step + 1]
-            # target_token_id_v_batch = target_var[:, step + 1]
-            loss.eval_batch(pred_token_distribute_batch, target_token_id_v_batch)
-            # for i in range(batch_size):
-            #     loss.eval_batch(pred_token_distribute_batch[i].view(-1,1), target_token_id_v_batch[i].view(-1,1))
+        # ''' prepare var for loss computing '''
+        # target_var = []
+        # for label in batch_y:
+        #     tmp_var = []
+        #     for id in label:
+        #         token_v = [0 for i in range(len(self.token2id))]
+        #         token_v[id] = 1
+        #         tmp_var.append(token_v)
+        #     target_var.append(tmp_var)
+        # target_var = torch.LongTensor(target_var)
 
         ''' decode prediction vector as result '''
         pred_tokens = []
@@ -511,10 +493,26 @@ class Seq2SeqActionGenerator(nn.Module):
             tgt_seq = [self.id2token[int(tok)] for tok in tgt_id_seq]
             preds.append(tgt_id_seq)
             pred_tokens.append(tgt_seq)
-        if output_token:
-            return preds, loss.acc_loss, pred_tokens
+        if self.training:
+            '''computing loss '''
+            # loss = Perplexity()
+            loss = NLLLoss()
+
+            for step, step_output in enumerate(decoder_outputs):
+                batch_size = batch_x.size(0)
+                ''' Select out current step's token. EOS is not included in step_output, so + 1 step for target '''
+                pred_token_distribute_batch = step_output.contiguous().view(batch_size, -1)
+                target_token_id_v_batch = batch_y[:, step + 1]
+                loss.eval_batch(pred_token_distribute_batch, target_token_id_v_batch)
+            if output_token:
+                return preds, loss.acc_loss, pred_tokens
+            else:
+                return preds, loss.acc_loss
         else:
-            return preds, loss.acc_loss
+            if output_token:
+                return preds, pred_tokens
+            else:
+                return preds
 
 
 def test_MultiLableClassifyLayer():

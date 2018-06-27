@@ -119,7 +119,7 @@ TRAIN_LOG_PATH = LOG_DIR + 'no_nlg_no_nlu.log'
 EXTRACTED_LOG_DATA_PATH = LOG_DIR + 'extracted_no_nlg_no_nlu.json'
 
 # For action generation and prediction
-EXPR_DIR = {(data_mark, DATA_DIR + '{0}/'.format(data_mark)) for data_mark in DATA_MARK}
+EXPR_DIR = dict([(data_mark, DATA_DIR + '{0}/'.format(data_mark)) for data_mark in DATA_MARK])
 
 ############################################################################
 #   User Simulator setting

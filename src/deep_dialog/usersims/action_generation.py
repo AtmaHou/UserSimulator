@@ -82,28 +82,28 @@ def get_f1(pred_tags_lst, golden_tags_lst):
     return precision, recall, f1
 
 
+def gen2vector(pred, id2token, full_dict):
+    tokens = [id2token[int(i)] for i in pred]
+    pred_dict = {
+        'diaact': [],
+        'inform_slots': [],
+        'request_slots': []
+    }
+    bad_slot = ['<PAD>', '<EOS>', '<SOS>'] + pred_dict.keys()
+    for ind, token in enumerate(tokens):
+        if token in pred_dict and ind + 1 < len(tokens) and tokens[ind + 1] not in bad_slot:
+            pred_dict[token].append(tokens[ind + 1])
+    # print('DEBUG pred_dict', pred_dict)
+    label = create_one_hot_v(pred_dict['diaact'], full_dict['diaact2id']) + \
+        create_one_hot_v(pred_dict['inform_slots'], full_dict['user_inform_slot2id']) + \
+        create_one_hot_v(pred_dict['request_slots'], full_dict['user_request_slot2id'])
+    return label
+
+
 def get_f1_from_generaion(pred_tags_lst, golden_tags_lst, full_dict):
     id2token = full_dict['tgt_id2token']
-
-    def gen2vector(pred):
-        tokens = [id2token[int(i)] for i in pred]
-        pred_dict = {
-            'diaact': [],
-            'inform_slots': [],
-            'request_slots': []
-        }
-        bad_slot = ['<PAD>', '<EOS>', '<SOS>'] + pred_dict.keys()
-        for ind, token in enumerate(tokens):
-            if token in pred_dict and ind + 1 < len(tokens) and tokens[ind + 1] not in bad_slot:
-                pred_dict[token].append(tokens[ind + 1])
-        # print('DEBUG pred_dict', pred_dict)
-        label = create_one_hot_v(pred_dict['diaact'], full_dict['diaact2id']) + \
-            create_one_hot_v(pred_dict['inform_slots'], full_dict['user_inform_slot2id']) + \
-            create_one_hot_v(pred_dict['request_slots'], full_dict['user_request_slot2id'])
-        return label
-
-    pred_tags_lst = [gen2vector(tags) for tags in pred_tags_lst]
-    golden_tags_lst = [gen2vector(tags) for tags in golden_tags_lst]
+    pred_tags_lst = [gen2vector(tags, id2token, full_dict) for tags in pred_tags_lst]
+    golden_tags_lst = [gen2vector(tags, id2token, full_dict) for tags in golden_tags_lst]
     return get_f1(pred_tags_lst, golden_tags_lst)
 
 
