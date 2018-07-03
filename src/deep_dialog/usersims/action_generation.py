@@ -186,7 +186,7 @@ def eval_model(model, valid_x, valid_y, full_dict, opt):
 
     all_preds = []
     for x, y in zip(valid_x, valid_y):
-        output, loss = model.forward(x, y)
+        output = model.forward(x, y)
         output_data = output
         # for s, pred_a, gold_a in zip(x, output_data, y):
             # log = {
@@ -200,7 +200,7 @@ def eval_model(model, valid_x, valid_y, full_dict, opt):
 
     output_file.close()
     valid_y = torch.cat(valid_y)  # re-form batches into one
-    if opt.seq2seq_gen:
+    if opt.select_model in ['ssg', 'seq2seq_gen', 'ssag', 'seq2seq_att_gen']:
         precision, recall, f1 = get_f1_from_generaion(pred_tags_lst=all_preds, golden_tags_lst=valid_y, full_dict=full_dict)
     else:
         precision, recall, f1 = get_f1(pred_tags_lst=all_preds, golden_tags_lst=valid_y)
@@ -227,7 +227,10 @@ def train_model(epoch, model, optimizer,
     for x, y in zip(train_x, train_y):
         cnt += 1
         model.zero_grad()
-        _, loss = model.forward(x, y)
+        if opt.select_model in ['ssg', 'seq2seq_gen', 'ssag', 'seq2seq_att_gen']:
+            _, loss = model.forward(x, y, teacher_forcing_ratio=opt.teacher_forcing_ratio)
+        else:
+            _, loss = model.forward(x, y)
         total_loss += loss.data[0]
         n_tags = len(train_y[0]) * len(x)
         loss.backward()
@@ -577,6 +580,99 @@ def seq2seq_action_generation(opt, single_turn_history=False):
             sos_id=tgt_token2id_dict[sos_token], eos_id=tgt_token2id_dict[eos_token],
             token2id=tgt_token2id_dict, id2token=tgt_id2token_dict, opt=opt,
             bidirectional=opt.direction == 'bi', use_attention=opt.use_attention, input_variable_lengths=False,
+            use_cuda=use_cuda
+        )
+
+        optimizer = optim.Adam(classifier.parameters())
+
+        best_valid, test_result = -1e8, -1e8
+        for epoch in range(opt.max_epoch):
+            best_valid, test_result = train_model(
+                epoch=epoch,
+                model=classifier,
+                optimizer=optimizer,
+                train_x=train_x, train_y=train_y,
+                valid_x=dev_x, valid_y=dev_y,
+                test_x=test_x, test_y=test_y,
+                full_dict=full_dict, best_valid=best_valid, test_f1_score=test_result
+            )
+            if opt.lr_decay > 0:
+                optimizer.param_groups[0]['lr'] *= opt.lr_decay  # there is only one group, so use index 0
+            # logging.info('Total encoder time: {:.2f}s'.format(model.eval_time / (epoch + 1)))
+            # logging.info('Total embedding time: {:.2f}s'.format(model.emb_time / (epoch + 1)))
+            # logging.info('Total classify time: {:.2f}s'.format(model.classify_time / (epoch + 1)))
+        logging.info("best_valid_f1: {:.6f}".format(best_valid))
+        logging.info("test_f1: {:.6f}".format(test_result))
+
+
+def seq2seq_att_action_generation(opt, single_turn_history=False):
+    use_cuda = opt.gpu >= 0 and torch.cuda.is_available()
+    with open(opt.train_path, 'r') as train_file, \
+            open(opt.dev_path, 'r') as dev_file, \
+            open(opt.test_path, 'r') as test_file, \
+            open(opt.dict_path, 'r') as dict_file:
+        logging.info('Start loading data from:\ntrain:{}\ndev:{}\ntest:{}\ndict:{}\n'.format(
+            opt.train_path, opt.dev_path, opt.test_path, opt.dict_path
+        ))
+        train_data = json.load(train_file)
+        dev_data = json.load(dev_file)
+        test_data = json.load(test_file)
+        full_dict = json.load(dict_file)
+
+        logging.info('Finish data loading.')
+        print('Finish  data loading!!!!!!!!!!')
+
+        # unpack data
+        train_input, train_label, train_turn_id = zip(*train_data)
+        dev_input, dev_label, dev_turn_id = zip(*dev_data)
+        test_input, test_label, test_turn_id = zip(*test_data)
+
+        # stack history
+        if not single_turn_history:
+            train_input = transform_data_into_history_style(train_input, train_turn_id)
+            dev_input = transform_data_into_history_style(dev_input, dev_turn_id)
+            test_input = transform_data_into_history_style(test_input, test_turn_id)
+
+        # gen tgt dict
+        sos_token = '<SOS>'
+        eos_token = '<EOS>'
+        pad_token = '<PAD>'
+        tgt_token2id_dict = {}
+        tgt_id2token_dict = {}
+        for token in (
+            [pad_token, sos_token, eos_token, 'diaact', 'inform_slots', 'request_slots'] +
+            full_dict['user_inform_slot2id'].keys() +
+            full_dict['user_request_slot2id'].keys() +
+            full_dict['diaact2id'].keys()
+        ):
+            if token not in tgt_token2id_dict:
+                t_id = len(tgt_token2id_dict)
+                tgt_token2id_dict[token] = t_id
+                tgt_id2token_dict[t_id] = token
+        full_dict['tgt_token2id'] = tgt_token2id_dict
+        full_dict['tgt_id2token'] = tgt_id2token_dict
+
+        # convert label to sequence
+        train_label = transform_label_into_sequence_style(train_label, full_dict, sos_token, eos_token, pad_token)
+        dev_label = transform_label_into_sequence_style(dev_label, full_dict, sos_token, eos_token, pad_token)
+        test_label = transform_label_into_sequence_style(test_label, full_dict, sos_token, eos_token, pad_token)
+
+        # create batches
+        train_x, train_y = create_batches(train_input, train_label, opt.batch_size, use_cuda=use_cuda)
+        dev_x, dev_y = create_batches(dev_input, dev_label, opt.batch_size, use_cuda=use_cuda)
+        test_x, test_y = create_batches(test_input, test_label, opt.batch_size, use_cuda=use_cuda)
+        #
+        # for i in range(3):
+        #     print('========= DEBUG =========', train_x[0][i])
+
+        input_size = len(train_input[0][0])
+
+        classifier = Seq2SeqActionGenerator(
+            input_size=input_size, hidden_size=opt.hidden_dim, n_layers=opt.depth,
+            tgt_vocb_size=len(tgt_token2id_dict), max_len=opt.max_len, dropout_p=opt.dropout,
+            sos_id=tgt_token2id_dict[sos_token], eos_id=tgt_token2id_dict[eos_token],
+            token2id=tgt_token2id_dict, id2token=tgt_id2token_dict, opt=opt,
+            bidirectional=opt.direction == 'bi', use_attention=True, input_variable_lengths=False,
             use_cuda=use_cuda
         )
 

@@ -112,6 +112,7 @@ DATA_MARK = [
     'extracted_no_nlg_no_nlu',
     'extracted_no_nlg_no_nlu_lstm',
     'extracted_no_nlg_no_nlu_seq2seq',
+    'extracted_no_nlg_no_nlu_seq2seq_att',
 ]
 
 # for raw data

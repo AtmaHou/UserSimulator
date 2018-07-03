@@ -1,4 +1,5 @@
 # coding: utf-8
+from __future__ import print_function, division
 
 import torch
 import torch.nn as nn
@@ -363,7 +364,7 @@ class DecoderRNN(BaseRNN):
                 inputs = inputs.cuda()
             max_length = self.max_length
         else:
-            max_length = inputs.size(1) - 1 # minus the start of sequence symbol
+            max_length = inputs.size(1) - 1  # minus the start of sequence symbol
 
         return inputs, batch_size, max_length
 
@@ -414,7 +415,6 @@ class Seq2seq(nn.Module):
     def forward(self, input_variable, input_lengths=None, target_variable=None,
                 teacher_forcing_ratio=0):
         encoder_outputs, encoder_hidden = self.encoder(input_variable, input_lengths)
-        # print('======= DEBUG ======= en outputs: {},\n en hidden: {}'.format(encoder_outputs, encoder_hidden))
         result = self.decoder(inputs=target_variable,
                               encoder_hidden=encoder_hidden,
                               encoder_outputs=encoder_outputs,
@@ -465,10 +465,10 @@ class Seq2SeqActionGenerator(nn.Module):
         if use_cuda:
             self.seq2seq.cuda()
 
-    def forward(self, batch_x, batch_y=None, teacher_forcing_ratio=0, output_token=False):
+    def forward(self, batch_x, batch_y=None, teacher_forcing_ratio=0, output_token=False, pad_token='<PAD>'):
         input_var = batch_x if type(batch_x) == Variable else Variable(batch_x)
         input_var = input_var.float()
-        if batch_y:
+        if batch_y is not None:
             batch_y = batch_y if type(batch_y) == Variable else Variable(batch_y)
 
         decoder_outputs, decoder_hidden, other = self.seq2seq(input_variable=input_var, target_variable=batch_y,
@@ -496,7 +496,12 @@ class Seq2SeqActionGenerator(nn.Module):
         if self.training:
             '''computing loss '''
             # loss = Perplexity()
-            loss = NLLLoss()
+            weight = torch.FloatTensor([1 for i in range(len(self.token2id))])
+            if self.use_cuda:
+                weight = weight.cuda()
+            loss = NLLLoss(weight=weight, mask=self.token2id[pad_token], size_average=True)
+
+            # loss = nn.NLLLoss(weight=weight, size_average=size_average)
 
             for step, step_output in enumerate(decoder_outputs):
                 batch_size = batch_x.size(0)

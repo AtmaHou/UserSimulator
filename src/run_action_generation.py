@@ -24,7 +24,7 @@ import sys
 # import dialog_config
 from deep_dialog import dialog_config
 from deep_dialog.usersims.action_generation import \
-    history_based_classification, one_turn_classification, seq2seq_action_generation
+    history_based_classification, one_turn_classification, seq2seq_action_generation, seq2seq_att_action_generation
 
 logging.basicConfig(filename='', format='%(asctime)-15s %(levelname)s: %(message)s', level=logging.INFO)
 
@@ -33,10 +33,13 @@ PROJECT_DIR = dialog_config.PROJECT_DIR
 
 def main():
     cmd = argparse.ArgumentParser()
+
+    # running mode
     cmd.add_argument('-sm', '--select_model', type=str, help='select target model to run', choices=[
         'otc', 'one_turn_c',
         'mtc', 'multi_turn_c',
-        'ssg', 'seq2seq_gen'
+        'ssg', 'seq2seq_gen',
+        'ssag', 'seq2seq_att_gen',
     ])
     model_opt = cmd.parse_args(sys.argv[1: 3])
 
@@ -46,14 +49,11 @@ def main():
         DATA_MARK = dialog_config.DATA_MARK[1]  # 'extracted_no_nlg_no_nlu_lstm'
     elif model_opt.select_model == 'ssg' or model_opt.select_model == 'seq2seq_gen':
         DATA_MARK = dialog_config.DATA_MARK[2]  # 'extracted_no_nlg_no_nlu_seq2seq'
+    elif model_opt.select_model == 'ssag' or model_opt.select_model == 'seq2seq_att_gen':
+        DATA_MARK = dialog_config.DATA_MARK[3]  # 'extracted_no_nlg_no_nlu_seq2seq'
     else:
-        raise TypeError("Wrong choice for model")
+        raise TypeError("Invalid choice for model")
 
-    # running mode
-    cmd.add_argument('-otc', '--one_turn_c', action='store_true', help='run train and test at the same time')
-    cmd.add_argument('-hbc', '--history_based_c', action='store_true', help='run train and test at the same time')
-    cmd.add_argument('-ssg', '--seq2seq_gen', action='store_true', help='run train and test at the same time')
-    # cmd.add_argument('-tt', '--train_and_test', action='store_true', help='run train and test at the same time')
 
     # define path
     cmd.add_argument('--train_path', help='the path to the training file.', default= '{0}TaskOrientedDialogue/data/TC-bot/data/{1}/{1}.train.json'.format(PROJECT_DIR, DATA_MARK))
@@ -68,7 +68,7 @@ def main():
 
     # environment setting
     cmd.add_argument('--seed', default=1, type=int, help='the random seed.')
-    cmd.add_argument('--gpu', default=-1, type=int, help='use id of gpu, -1 if cpu.')
+    cmd.add_argument('-gpu', '--gpu', default=-1, type=int, help='use id of gpu, -1 if cpu.')
     cmd.add_argument('--debug', action='store_true', help='run in debug mode')
 
     # define detail
@@ -93,6 +93,7 @@ def main():
     cmd.add_argument("--lr", type=float, default=0.01, help='the learning rate.')
     cmd.add_argument("--lr_decay", type=float, default=0, help='the learning rate decay.')
     cmd.add_argument("--clip_grad", type=float, default=5, help='the tense of clipped grad.')
+    cmd.add_argument("--teacher_forcing_ratio", type=float, default=0.5, help='the teacher forcing ratio for seq2seq training')
 
     opt = cmd.parse_args()
 
@@ -113,7 +114,9 @@ def main():
     elif opt.select_model == 'ssg' or opt.select_model == 'seq2seq_gen':
         print('============== Start seq2seq action generation ==============')
         seq2seq_action_generation(opt)
-
+    elif opt.select_model == 'ssag' or model_opt.select_model == 'seq2seq_att_gen':
+        print('============== Start seq2seq_att action generation ==============')
+        seq2seq_att_action_generation(opt)
     # setting logging
     # DEBUG = False
     # DEBUG = True

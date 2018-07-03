@@ -393,8 +393,8 @@ def cook_one_dialogue(dialogue_item, user_inform_slot2id, user_request_slot2id,
             #         state_dict['history_slots'].append(slot)
 
             label = create_one_hot_v([turn['diaact']], diaact2id) + \
-                    create_one_hot_v(turn['inform_slots'].keys(), user_inform_slot2id) + \
-                    create_one_hot_v(turn['request_slots'].keys(), user_request_slot2id)
+                create_one_hot_v(turn['inform_slots'].keys(), user_inform_slot2id) + \
+                create_one_hot_v(turn['request_slots'].keys(), user_request_slot2id)
 
             diaact_v = label[: len(diaact2id)]
             if sum(diaact_v) > 1 or sum(diaact_v) <= 0:

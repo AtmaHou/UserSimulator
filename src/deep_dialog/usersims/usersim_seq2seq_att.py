@@ -37,13 +37,13 @@ from .action_generation import *
 from .prepare_data import *
 import torch
 
-DATA_MARK = dialog_config.DATA_MARK[2]
+DATA_MARK = dialog_config.DATA_MARK[3]
 EXPR_DIR = dialog_config.EXPR_DIR[DATA_MARK]
 
 debug_str = '=========== debug =========='
 
 
-class Seq2SeqUserSimulator(RuleSimulator):
+class Seq2SeqAttUserSimulator(RuleSimulator):
     def __init__(self, movie_dict=None, act_set=None, slot_set=None, start_set=None, params=None, use_cuda=False,
                  model_path=EXPR_DIR + 'model.pkl', dict_path=EXPR_DIR + '{0}.dict.json'.format(DATA_MARK),
                  rule_first_turn=False):
@@ -79,7 +79,7 @@ class Seq2SeqUserSimulator(RuleSimulator):
                 tgt_vocb_size=len(self.token2id), max_len=param['opt'].max_len, dropout_p=param['opt'].dropout,
                 sos_id=param['sos_id'], eos_id=param['eos_id'],
                 token2id=self.token2id, id2token=self.id2token, opt=param['opt'],
-                bidirectional=param['opt'].direction == 'bi', use_attention=param['opt'].use_attention,
+                bidirectional=param['opt'].direction == 'bi', use_attention=True,
                 input_variable_lengths=False,
                 use_cuda=use_cuda
             )
