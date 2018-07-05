@@ -520,6 +520,88 @@ class Seq2SeqActionGenerator(nn.Module):
                 return preds
 
 
+class State2Seq(nn.Module):
+    def __init__(self, input_size, hidden_size, n_layers, tgt_vocb_size, max_len, dropout_p,
+                 sos_id, eos_id, token2id, id2token, opt,
+                 bidirectional=False, use_attention=False, input_variable_lengths=False,
+                 use_cuda=False
+                 ):
+        super(State2Seq, self).__init__()
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.n_layers = n_layers
+        self.tgt_vocb_size = tgt_vocb_size
+        self.max_len = max_len
+        self.dropout_p = dropout_p
+        self.sos_id, self.eos_id = sos_id, eos_id
+        self.token2id = token2id
+        self.id2token = id2token
+        self.bidirectional = bidirectional
+        self.use_attention = use_attention
+        self.opt = opt
+        self.use_cuda = use_cuda
+
+
+        self.encoder = StateEncoder(
+            input_size=input_size, max_len=max_len, hidden_size=hidden_size, input_dropout_p=dropout_p,
+            dropout_p=dropout_p, n_layers=n_layers, bidirectional=bidirectional, rnn_cell=opt.encoder,
+            variable_lengths=False
+        )
+        self.decoder = DecoderRNN(
+            vocab_size=tgt_vocb_size, max_len=max_len, hidden_size=hidden_size * 2 if bidirectional else hidden_size,
+            eos_id=eos_id, sos_id=sos_id, n_layers=n_layers, rnn_cell=opt.decoder,
+            bidirectional=bidirectional, input_dropout_p=dropout_p, dropout_p=dropout_p, use_attention=use_attention,
+            use_cuda=self.use_cuda,
+        )
+        self.seq2seq = Seq2seq(self.encoder, self.decoder)
+        if use_cuda:
+            self.seq2seq.cuda()
+
+    def forward(self, batch_x, batch_y=None, teacher_forcing_ratio=0, output_token=False, pad_token='<PAD>'):
+        input_var = batch_x if type(batch_x) == Variable else Variable(batch_x)
+        input_var = input_var.float()
+        if batch_y is not None:
+            batch_y = batch_y if type(batch_y) == Variable else Variable(batch_y)
+
+        decoder_outputs, decoder_hidden, other = self.seq2seq(input_variable=input_var, target_variable=batch_y,
+                                                              teacher_forcing_ratio=teacher_forcing_ratio)
+
+        ''' decode prediction vector as result '''
+        pred_tokens = []
+        preds = []
+        for ind in range(len(batch_x)):
+            length = other['length'][ind]
+            tgt_id_seq = [other['sequence'][di][ind].data[0] for di in range(length)]
+            tgt_seq = [self.id2token[int(tok)] for tok in tgt_id_seq]
+            preds.append(tgt_id_seq)
+            pred_tokens.append(tgt_seq)
+        if self.training:
+            '''computing loss '''
+            # loss = Perplexity()
+            weight = torch.FloatTensor([1 for i in range(len(self.token2id))])
+            if self.use_cuda:
+                weight = weight.cuda()
+            loss = NLLLoss(weight=weight, mask=self.token2id[pad_token], size_average=True)
+
+            # loss = nn.NLLLoss(weight=weight, size_average=size_average)
+
+            for step, step_output in enumerate(decoder_outputs):
+                batch_size = batch_x.size(0)
+                ''' Select out current step's token. EOS is not included in step_output, so + 1 step for target '''
+                pred_token_distribute_batch = step_output.contiguous().view(batch_size, -1)
+                target_token_id_v_batch = batch_y[:, step + 1]
+                loss.eval_batch(pred_token_distribute_batch, target_token_id_v_batch)
+            if output_token:
+                return preds, loss.acc_loss, pred_tokens
+            else:
+                return preds, loss.acc_loss
+        else:
+            if output_token:
+                return preds, pred_tokens
+            else:
+                return preds
+
+
 def test_MultiLableClassifyLayer():
     """
     Unit test for multilabel ClassifyLayer
