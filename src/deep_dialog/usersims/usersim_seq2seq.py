@@ -69,6 +69,7 @@ class Seq2SeqUserSimulator(RuleSimulator):
         self.use_cuda = use_cuda
         self.state_v_component = dialog_config.STATE_V_COMPONENT
         with open(model_path, 'r') as reader:
+            print(debug_str, model_path)
             saved_model = torch.load(reader)
             # print(saved_model.keys())
             param = saved_model['param']
@@ -94,7 +95,6 @@ class Seq2SeqUserSimulator(RuleSimulator):
         state['history_slots']: keeps all the informed_slots
         state['rest_slots']: keep all the slots (which is still in the stack yet)
         """
-
         self.state = {}
         self.state['history_slots'] = {}
         self.state['inform_slots'] = {}

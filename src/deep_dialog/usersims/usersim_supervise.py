@@ -77,6 +77,16 @@ class SuperviseUserSimulator(RuleSimulator):
         with open(dict_path, 'r') as reader:
             self.full_dict = json.load(reader)
 
+        self.state_dict = {}
+
+    def get_state_representation(self):
+        state_v = []
+        for v_name in self.state_v_component:
+            state_v.extend(self.state_dict[v_name])
+        state_v = [state_v]  # set batch size as 1
+        state_v = torch.LongTensor(state_v)
+        return state_v
+
     def initialize_episode(self):
         """ Initialize a new episode (dialog)
         state['history_slots']: keeps all the informed_slots
@@ -120,11 +130,10 @@ class SuperviseUserSimulator(RuleSimulator):
             'consistent_slots': [],  # track consistency
             'inconsistent_slots': [],  # track inconsistency
         }
-        state_v = []
-        for v_name in self.state_v_component:
-            state_v.extend(self.state_dict[v_name])
+
+        state_representation = self.get_state_representation()
         if self.rule_first_turn:
-            user_action = self._sample_action()
+            response_action = self._sample_action()
         else:
             pred_action = self.predict_action(state_representation)
             self.fill_slot_value(pred_action)
@@ -134,14 +143,30 @@ class SuperviseUserSimulator(RuleSimulator):
             response_action['request_slots'] = self.state['request_slots']
             response_action['turn'] = self.state['turn']
             response_action['nl'] = ""
-            user_action = response_action
+
+            # add NL to dia_act
+            self.add_nl_to_action(response_action)
+
+        current_user_turn = {
+            "request_slots": response_action['request_slots'],
+            "diaact": response_action['diaact'],
+            "inform_slots": response_action['inform_slots'],
+            "turn_id": self.state['turn'],
+            "speaker": "usr",
+            "utterance": '',
+        }
+
+        # update state_dict: informed slots
+        self.state_dict = update_state_dict_slots(
+            current_speaker='usr', turn=current_user_turn, user_goal=self.goal, old_state_dict=self.state_dict
+        )
         assert (self.episode_over != 1), ' but we just started'
-        return user_action
+        return response_action
 
     def predict_action(self, state_representation):
         self.classifier.eval()
         output, loss = self.classifier.forward(state_representation)
-        pred_action = vector2action(output, self.full_dict)
+        pred_action = vector2action(output[0], self.full_dict)
         return pred_action
 
     def fill_slot_value(self, pred_action):

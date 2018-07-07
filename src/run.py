@@ -43,13 +43,15 @@ from deep_dialog.dialog_config import *
 from deep_dialog.nlu import nlu
 from deep_dialog.nlg import nlg
 
-
+import random
+import torch
 """ 
 Launch a dialog simulation per the command line arguments
 This function instantiates a user_simulator, an agent, and a dialog system.
 Next, it triggers the simulator to run for the specified number of episodes.
 """
 
+USE_CUDA = False
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -101,12 +103,26 @@ if __name__ == "__main__":
     
     parser.add_argument('--split_fold', dest='split_fold', default=5, type=int, help='the number of folders to split the user goal')
     parser.add_argument('--learning_phase', dest='learning_phase', default='all', type=str, help='train/test/all; default is all')
-    
+
+    ''' Neural Simulator Parameters'''
+    parser.add_argument('-gpu', '--gpu', default=-1, type=int, help='use id of gpu, -1 if cpu.')
+    parser.add_argument('--seed', default=1, type=int, help='the random seed.')
+
     args = parser.parse_args()
     params = vars(args)
 
+    ''' Set GPU and seed'''
+    torch.manual_seed(args.seed)
+    random.seed(args.seed)
+    if args.gpu >= 0:
+        torch.cuda.set_device(args.gpu)
+        if args.seed > 0:
+            torch.cuda.manual_seed(args.seed)
+    USE_CUDA = args.gpu >= 0 and torch.cuda.is_available()
+
     print 'Dialog Parameters: '
     print json.dumps(params, indent=2)
+
 
 
 max_turn = params['max_turn']
@@ -201,11 +217,11 @@ if usr == 0:# real user
 elif usr == 1: 
     user_sim = RuleSimulator(movie_dictionary, act_set, slot_set, goal_set, usersim_params)
 elif usr == 2:
-    user_sim = SuperviseUserSimulator(movie_dictionary, act_set, slot_set, goal_set, usersim_params)
+    user_sim = SuperviseUserSimulator(movie_dictionary, act_set, slot_set, goal_set, usersim_params, use_cuda=USE_CUDA)
 elif usr == 3:
-    user_sim = Seq2SeqUserSimulator(movie_dictionary, act_set, slot_set, goal_set, usersim_params)
+    user_sim = Seq2SeqUserSimulator(movie_dictionary, act_set, slot_set, goal_set, usersim_params, use_cuda=USE_CUDA)
 elif usr == 4:
-    user_sim = Seq2SeqAttUserSimulator(movie_dictionary, act_set, slot_set, goal_set, usersim_params)
+    user_sim = Seq2SeqAttUserSimulator(movie_dictionary, act_set, slot_set, goal_set, usersim_params, use_cuda=USE_CUDA)
 
 ################################################################################
 #    Add your user simulator here

@@ -107,7 +107,8 @@ class MultiLableClassifyLayer(nn.Module):
     def forward(self, input, golden=None):
         # print('DEBUG:', input, golden)
         input = Variable(input.float()) if type(input) != Variable else input
-        golden = Variable(golden.float()) if type(golden) != Variable else golden
+        if golden is not None:
+            golden = Variable(golden.float()) if type(golden) != Variable else golden
         pred = self.main(input)  # For each pos, > 0 for positive tag, < 0 for negative tag
         # For each pos, 1 for positive tag, 0 for negative tag
         # print('DEBUG!!!!!!!!!!', pred, pred.size())

@@ -256,7 +256,8 @@ def vector2action(action_vector, full_dict):
     for ind, item in enumerate(request_slots_v):
         if item == 1:
             request_slots.append(id2user_request_slot[str(ind)])
-
+    # if not diaact:
+    print('====== DEBUG ======', action_vector, id2diaact)
     ret = {
         'diaact': diaact,
         'inform_slots': inform_slots,
@@ -876,7 +877,6 @@ def state2seq_att_action_generation(opt):
             # logging.info('Total classify time: {:.2f}s'.format(model.classify_time / (epoch + 1)))
         logging.info("best_valid_f1: {:.6f}".format(best_valid))
         logging.info("test_f1: {:.6f}".format(test_result))
-
 
 
 if __name__ == '__main__':
