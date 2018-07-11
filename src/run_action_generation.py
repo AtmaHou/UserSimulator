@@ -23,8 +23,8 @@ import sys
 # sys.path.append("..")
 # import dialog_config
 from deep_dialog import dialog_config
-from deep_dialog.usersims.action_generation import \
-    history_based_classification, one_turn_classification, seq2seq_action_generation, seq2seq_att_action_generation
+from deep_dialog.usersims.action_generation import history_based_classification, one_turn_classification, \
+    seq2seq_action_generation, seq2seq_att_action_generation, state2seq_action_generation
 
 logging.basicConfig(filename='', format='%(asctime)-15s %(levelname)s: %(message)s', level=logging.INFO)
 
@@ -40,6 +40,7 @@ def main():
         'mtc', 'multi_turn_c',
         'ssg', 'seq2seq_gen',
         'ssag', 'seq2seq_att_gen',
+        'sv2s', 'state_v2seq',
     ])
     model_opt = cmd.parse_args(sys.argv[1: 3])
 
@@ -50,7 +51,9 @@ def main():
     elif model_opt.select_model == 'ssg' or model_opt.select_model == 'seq2seq_gen':
         DATA_MARK = dialog_config.DATA_MARK[2]  # 'extracted_no_nlg_no_nlu_seq2seq'
     elif model_opt.select_model == 'ssag' or model_opt.select_model == 'seq2seq_att_gen':
-        DATA_MARK = dialog_config.DATA_MARK[3]  # 'extracted_no_nlg_no_nlu_seq2seq'
+        DATA_MARK = dialog_config.DATA_MARK[3]  # 'extracted_no_nlg_no_nlu_seq2seq_att'
+    elif model_opt.select_model == 'sv2s' or model_opt.select_model == 'state_v2seq':
+        DATA_MARK = dialog_config.DATA_MARK[4]  # 'extracted_no_nlg_no_nlu_state_v2seq'
     else:
         raise TypeError("Invalid choice for model")
 
@@ -61,6 +64,7 @@ def main():
     cmd.add_argument('--test_path', help='the path to the testing file.', default='{0}TaskOrientedDialogue/data/TC-bot/data/{1}/{1}.test.json'.format(PROJECT_DIR, DATA_MARK))
     cmd.add_argument('--dict_path', help='the path to the full dict file.', default='{0}TaskOrientedDialogue/data/TC-bot/data/{1}/{1}.dict.json'.format(PROJECT_DIR, DATA_MARK))
     cmd.add_argument("--model", help="path to save model", default='{0}TaskOrientedDialogue/data/TC-bot/data/{1}/'.format(PROJECT_DIR, DATA_MARK))
+    cmd.add_argument("--model_name", help="name to save model", default='model.pkl')
     cmd.add_argument('--output', help='The path to the output file.', default='{0}TaskOrientedDialogue/data/TC-bot/data/{1}/{1}.output.json'.format(PROJECT_DIR, DATA_MARK))
     # cmd.add_argument("--script", required=True, help="The path to the evaluation script: ./eval/conlleval.pl")
     # cmd.add_argument("--word_embedding", type=str, default='',
@@ -85,7 +89,7 @@ def main():
     cmd.add_argument("--hidden_dim", "--hidden", type=int, default=128, help='the hidden dimension.')
     cmd.add_argument("--max_epoch", type=int, default=30, help='the maximum number of iteration.')
     cmd.add_argument("--word_dim", type=int, default=300, help='the input dimension.')
-    cmd.add_argument("--dropout", type=float, default=0.5, help='the dropout rate')
+    cmd.add_argument("--dropout", type=float, default=0.3, help='the dropout rate')
     cmd.add_argument("--depth", type=int, default=2, help='the depth of lstm')
     cmd.add_argument('--max_len', type=int,default=50, help='max length for sentence')
     cmd.add_argument('--use_attention', action='store_true', help='use attention in decoding')
@@ -94,7 +98,7 @@ def main():
     cmd.add_argument("--lr_decay", type=float, default=0, help='the learning rate decay.')
     cmd.add_argument("--clip_grad", type=float, default=5, help='the tense of clipped grad.')
     cmd.add_argument("--teacher_forcing_ratio", type=float, default=0.5, help='the teacher forcing ratio for seq2seq training')
-
+    cmd.add_argument('--embedded_v_size', type=int, default=200, help='set embedded vector size for state2seq')
     opt = cmd.parse_args()
 
     print(opt)
@@ -117,6 +121,9 @@ def main():
     elif opt.select_model == 'ssag' or model_opt.select_model == 'seq2seq_att_gen':
         print('============== Start seq2seq_att action generation ==============')
         seq2seq_att_action_generation(opt)
+    elif model_opt.select_model == 'sv2s' or model_opt.select_model == 'state_v2seq':
+        print('============== Start state_v2seq action generation ==============')
+        state2seq_action_generation(opt)
     # setting logging
     # DEBUG = False
     # DEBUG = True

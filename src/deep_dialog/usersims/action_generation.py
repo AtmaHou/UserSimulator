@@ -19,7 +19,7 @@ import logging
 import numpy as np
 import sys
 
-from nn_models import MultiLableClassifyLayer, LSTM_MultiLabelClassifier, Seq2SeqActionGenerator
+from nn_models import MultiLableClassifyLayer, LSTM_MultiLabelClassifier, Seq2SeqActionGenerator, State2Seq
 from prepare_data import *
 
 try:
@@ -39,6 +39,21 @@ PROJECT_DIR = '/users4/ythou/Projects/'  # for hpc
 
 # DATA_MARK = 'extracted_no_nlg_no_nlu_lstm '
 DATA_MARK = 'extracted_no_nlg_no_nlu'
+
+
+HARD_CODED_V_COMPONENT = [
+    'goal_inform_slots_v',
+    'goal_request_slots_v',
+    'history_slots_v',  # informed slots, 1 informed, 0 irrelevant, -1 not informed,
+    'rest_slots_v',  # remained request slots, 1 for remained, 0 irrelevant, -1 for already got,
+    'system_diaact_v',  # system diaact,
+    'system_inform_slots_v',  # inform slots of sys response,
+    'system_request_slots_v',  # request slots of sys response,
+    'consistency_v',  # for each position, -1 inconsistent, 0 irrelevent or not requested, 1 consistent,
+    'dialog_status_v'  # -1, 0, 1 for failed, no outcome, success,
+]
+
+debug_str = '======================= DEBUG ========================'
 
 
 def get_f1(pred_tags_lst, golden_tags_lst):
@@ -109,18 +124,8 @@ def get_f1_from_generaion(pred_tags_lst, golden_tags_lst, full_dict):
 
 def vector2state(state_vector, full_dict):
     state_v_component = dialog_config.STATE_V_COMPONENT
-    hard_coded_v_component = [
-        'goal_inform_slots_v',
-        'goal_request_slots_v',
-        'history_slots_v',  # informed slots, 1 informed, 0 irrelevant, -1 not informed,
-        'rest_slots_v',  # remained request slots, 1 for remained, 0 irrelevant, -1 for already got,
-        'system_diaact_v',  # system diaact,
-        'system_inform_slots_v',  # inform slots of sys response,
-        'system_request_slots_v',  # request slots of sys response,
-        'consistency_v',  # for each position, -1 inconsistent, 0 irrelevent or not requested, 1 consistent,
-        'dialog_status_v'  # -1, 0, 1 for failed, no outcome, success,
-    ]
-    if state_v_component != hard_coded_v_component:
+
+    if state_v_component != HARD_CODED_V_COMPONENT:
         raise RuntimeError("vector2state is hard coded, please alter the vector_corresponding_dict_lst")
 
     id2sys_inform_slot = full_dict['id2sys_inform_slot']
@@ -137,7 +142,8 @@ def vector2state(state_vector, full_dict):
     ret = {}
     start_idx = 0
 
-    state_vector_components = {}
+    state_vector_dict = {}
+    state_vector_list = []
     user_goal = {}
     sys_action = {}  # request slots, inform slots, diaact, speaker
     history_slots = {}  # pos: informed, neg: not_informed, irr: irrelevant
@@ -150,6 +156,7 @@ def vector2state(state_vector, full_dict):
         neg = []
         irr = []
         for ind, value in enumerate(vector):
+            ind = str(ind)
             if value == 1:
                 pos.append(id2item[ind])
             elif value == -1:
@@ -164,6 +171,7 @@ def vector2state(state_vector, full_dict):
         pos = []
         irr = []
         for ind, value in enumerate(vector):
+            ind = str(ind)
             if value == 1:
                 pos.append(id2item[ind])
             elif value == 0:
@@ -177,7 +185,8 @@ def vector2state(state_vector, full_dict):
 
     for name, id2item in zip(state_v_component, vector_corresponding_dict_lst):
         component_v = state_vector[start_idx: start_idx + len(id2item)]
-        state_vector_components[name] = component_v
+        state_vector_dict[name] = component_v
+        state_vector_list.append(component_v)
         if name == 'goal_inform_slots_v':
             tmp = decode_2_value_vector(component_v, id2item)
             user_goal['inform_slots'] = tmp['pos']
@@ -197,7 +206,7 @@ def vector2state(state_vector, full_dict):
             rest_slots['neg'] = tmp['neg']
 
         if name == 'system_diaact_v':  # system diaact
-            tmp = decode_1_value_vector(component_v, id2item)
+            tmp = decode_2_value_vector(component_v, id2item)
             sys_action['diaact'] = tmp
 
         if name == 'system_inform_slots_v':  # inform slots of sys response
@@ -218,7 +227,8 @@ def vector2state(state_vector, full_dict):
             dialog_status = tmp
         start_idx += len(id2item)
     ret = {
-        'state_vectors': state_vector_components,
+        'state_vector_dict': state_vector_dict,
+        'state_vector_list': state_vector_list,
         'user_goal': user_goal,
         'sys_action': sys_action,  # request slots, inform slots, diaact, speaker
         'history_slots': history_slots,  # pos: informed, neg: not_informed, irr: irrelevant
@@ -257,7 +267,7 @@ def vector2action(action_vector, full_dict):
         if item == 1:
             request_slots.append(id2user_request_slot[str(ind)])
     # if not diaact:
-    print('====== DEBUG ======', action_vector, id2diaact)
+    #   print('====== DEBUG ======', action_vector, id2diaact)
     ret = {
         'diaact': diaact,
         'inform_slots': inform_slots,
@@ -290,8 +300,14 @@ def eval_model(model, valid_x, valid_y, full_dict, opt):
         all_preds.extend(output_data)
 
     output_file.close()
-    valid_y = torch.cat(valid_y)  # re-form batches into one
-    if opt.select_model in ['ssg', 'seq2seq_gen', 'ssag', 'seq2seq_att_gen']:
+    if type(valid_y) == list:
+        tmp = []
+        for yi in valid_y:
+            tmp.extend(yi)
+        valid_y = tmp
+    else:
+        valid_y = torch.cat(valid_y)  # re-form batches into one
+    if opt.select_model in ['ssg', 'seq2seq_gen', 'ssag', 'seq2seq_att_gen', 'sv2s', 'state_v2seq']:
         precision, recall, f1 = get_f1_from_generaion(pred_tags_lst=all_preds, golden_tags_lst=valid_y, full_dict=full_dict)
     else:
         precision, recall, f1 = get_f1(pred_tags_lst=all_preds, golden_tags_lst=valid_y)
@@ -363,10 +379,19 @@ def train_model(epoch, model, optimizer,
             saving_dict['param']['token2id'] = model.token2id
         if hasattr(model, 'id2token'):
             saving_dict['param']['id2token'] = model.id2token
+        ''' Store Param For state2seq model: slot_num, diaact_num, embedded_v_size, state_v_component'''
+        if hasattr(model, 'slot_num'):
+            saving_dict['param']['slot_num'] = model.slot_num
+        if hasattr(model, 'diaact_num'):
+            saving_dict['param']['diaact_num'] = model.diaact_num
+        if hasattr(model, 'embedded_v_size'):
+            saving_dict['param']['embedded_v_size'] = model.embedded_v_size
+        if hasattr(model, 'state_v_component'):
+            saving_dict['param']['state_v_component'] = model.state_v_component
 
         torch.save(
             saving_dict,
-            os.path.join(opt.model, 'model.pkl')
+            os.path.join(opt.model, opt.model_name)
         )
         best_valid = dev_f1_score
         test_precision, test_recall, test_f1_score = eval_model(model, test_x, test_y, full_dict, opt)
@@ -376,21 +401,24 @@ def train_model(epoch, model, optimizer,
     return best_valid, test_f1_score
 
 
-def create_one_batch(x, y, use_cuda=False):
+def create_one_batch(x, y, use_cuda=False, tensor=True):
     batch_size = len(x)
     lens = [len(xi) for xi in x]
-    max_len = max(lens)  # useless for current situation
+    max_len = max(lens)  # for variable length situation for current situation
 
-    # print('========== DEBUG ====== y: {} * {} * {}'.format(len(y), len(y[0]), len(y[0][0])))
-    batch_x = torch.LongTensor(x)
-    batch_y = torch.LongTensor(y)
-    if use_cuda:
-        batch_x = batch_x.cuda()
-        batch_y = batch_y.cuda()
+    if tensor:
+        batch_x = torch.LongTensor(x)
+        batch_y = torch.LongTensor(y)
+        if use_cuda:
+            batch_x = batch_x.cuda()
+            batch_y = batch_y.cuda()
+    else:
+        batch_x = x
+        batch_y = y
     return batch_x, batch_y, lens
 
 
-def create_batches(x, y, batch_size, sort=True, shuffle=True, use_cuda=False):
+def create_batches(x, y, batch_size, sort=True, shuffle=True, use_cuda=False, tensor=True):
     lst = list(range(len(x)))
     if shuffle:
         random.shuffle(lst)
@@ -405,7 +433,7 @@ def create_batches(x, y, batch_size, sort=True, shuffle=True, use_cuda=False):
 
     for i in range(nbatch):
         start_id, end_id = i * batch_size, (i + 1) * batch_size
-        bx, by, _ = create_one_batch(x[start_id: end_id], y[start_id: end_id], use_cuda)
+        bx, by, _ = create_one_batch(x[start_id: end_id], y[start_id: end_id], use_cuda, tensor)
 
         batches_x.append(bx)
         batches_y.append(by)
@@ -789,7 +817,36 @@ def seq2seq_att_action_generation(opt, single_turn_history=False):
         logging.info("test_f1: {:.6f}".format(test_result))
 
 
-def state2seq_att_action_generation(opt):
+def convert_data_into_state_style(datas, full_dict, sample_style='multi-hot', history_turns=1):
+    ret = []
+    for item in datas:
+        dialog_state_dict = vector2state(item, full_dict)
+        # Content:
+        # {
+        #         'state_vectors': state_vector_components,
+        #         'user_goal': user_goal,
+        #         'sys_action': sys_action,  # request slots, inform slots, diaact, speaker
+        #         'history_slots': history_slots,  # pos: informed, neg: not_informed, irr: irrelevant
+        #         'rest_slots': rest_slots,  # pos: remained, neg: already_got, irrelevant
+        #         'consistent_slots': consistent_slots,  # pos: consistent, neg: inconsistent, irrelevant
+        #         'dialog_status': dialog_status,
+        # }
+        if sample_style == 'multi-hot':
+            sample = dialog_state_dict['state_vector_list']
+        else:
+            raise NotImplementedError
+
+        if history_turns == 1:
+            ret.append(sample)
+        elif history_turns == -1:
+            ''' no history length limit, do padding here '''
+            raise NotImplementedError
+        else:
+            raise NotImplementedError
+    return ret
+
+
+def state2seq_action_generation(opt):
     use_cuda = opt.gpu >= 0 and torch.cuda.is_available()
     with open(opt.train_path, 'r') as train_file, \
             open(opt.dev_path, 'r') as dev_file, \
@@ -811,10 +868,12 @@ def state2seq_att_action_generation(opt):
         dev_input, dev_label, dev_turn_id = zip(*dev_data)
         test_input, test_label, test_turn_id = zip(*test_data)
 
-        ''' change input to a format style '''
+        ''' change input to a state format of multi-vector'''
+        train_input = convert_data_into_state_style(train_input, full_dict)
+        dev_input = convert_data_into_state_style(dev_input, full_dict)
+        test_input = convert_data_into_state_style(test_input, full_dict)
 
-
-        # gen tgt dict
+        ''' gen tgt dict '''
         sos_token = '<SOS>'
         eos_token = '<EOS>'
         pad_token = '<PAD>'
@@ -833,27 +892,27 @@ def state2seq_att_action_generation(opt):
         full_dict['tgt_token2id'] = tgt_token2id_dict
         full_dict['tgt_id2token'] = tgt_id2token_dict
 
-        # convert label to sequence
+        ''' convert label to sequence '''
         train_label = transform_label_into_sequence_style(train_label, full_dict, sos_token, eos_token, pad_token)
         dev_label = transform_label_into_sequence_style(dev_label, full_dict, sos_token, eos_token, pad_token)
         test_label = transform_label_into_sequence_style(test_label, full_dict, sos_token, eos_token, pad_token)
 
-        # create batches
-        train_x, train_y = create_batches(train_input, train_label, opt.batch_size, use_cuda=use_cuda)
-        dev_x, dev_y = create_batches(dev_input, dev_label, opt.batch_size, use_cuda=use_cuda)
-        test_x, test_y = create_batches(test_input, test_label, opt.batch_size, use_cuda=use_cuda)
-        #
-        # for i in range(3):
-        #     print('========= DEBUG =========', train_x[0][i])
+        ''' create batches '''
+        # input for each sample is a list, so don't change to tensor here
+        train_x, train_y = create_batches(train_input, train_label, opt.batch_size, use_cuda=use_cuda, tensor=False)
+        dev_x, dev_y = create_batches(dev_input, dev_label, opt.batch_size, use_cuda=use_cuda, tensor=False)
+        test_x, test_y = create_batches(test_input, test_label, opt.batch_size, use_cuda=use_cuda, tensor=False)
 
         input_size = len(train_input[0][0])
 
-        classifier = Seq2SeqActionGenerator(
-            input_size=input_size, hidden_size=opt.hidden_dim, n_layers=opt.depth,
+        classifier = State2Seq(
+            slot_num=len(full_dict['user_inform_slot2id']), diaact_num=len(full_dict['diaact2id']),
+            embedded_v_size=opt.embedded_v_size, state_v_component=HARD_CODED_V_COMPONENT,
+            hidden_size=opt.hidden_dim, n_layers=opt.depth,
             tgt_vocb_size=len(tgt_token2id_dict), max_len=opt.max_len, dropout_p=opt.dropout,
             sos_id=tgt_token2id_dict[sos_token], eos_id=tgt_token2id_dict[eos_token],
             token2id=tgt_token2id_dict, id2token=tgt_id2token_dict, opt=opt,
-            bidirectional=opt.direction == 'bi', use_attention=True, input_variable_lengths=False,
+            bidirectional=False, use_attention=True, input_variable_lengths=False,
             use_cuda=use_cuda
         )
 

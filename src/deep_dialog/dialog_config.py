@@ -4,6 +4,7 @@ Created on May 17, 2016
 @author: xiul, t-zalipt
 '''
 
+''' In my neural model, I actually use the union set of all possible slots'''
 sys_request_slots = ['moviename', 'theater', 'starttime', 'date', 'numberofpeople', 'genre', 'state', 'city', 'zip', 'critic_rating', 'mpaa_rating', 'distanceconstraints', 'video_format', 'theater_chain', 'price', 'actor', 'description', 'other', 'numberofkids']
 sys_inform_slots = ['moviename', 'theater', 'starttime', 'date', 'genre', 'state', 'city', 'zip', 'critic_rating', 'mpaa_rating', 'distanceconstraints', 'video_format', 'theater_chain', 'price', 'actor', 'description', 'other', 'numberofkids', 'taskcomplete', 'ticket']
 
@@ -113,6 +114,7 @@ DATA_MARK = [
     'extracted_no_nlg_no_nlu_lstm',
     'extracted_no_nlg_no_nlu_seq2seq',
     'extracted_no_nlg_no_nlu_seq2seq_att',
+    'extracted_no_nlg_no_nlu_state_v2seq',
 ]
 
 # for raw data

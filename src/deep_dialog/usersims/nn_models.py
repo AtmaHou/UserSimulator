@@ -153,12 +153,12 @@ class LSTM_MultiLabelClassifier(nn.Module):
             return output
 
 
-class StateEncoder(BaseRNN):
+class VanillaEncoder(BaseRNN):
     def __init__(self, input_size, max_len, hidden_size,
                  vocab_size=False, input_dropout_p=0, dropout_p=0,
-                 n_layers=1, bidirectional=False, rnn_cell='gru', variable_lengths=False):
-        super(StateEncoder, self).__init__(vocab_size, max_len, hidden_size,
-                                           input_dropout_p, dropout_p, n_layers, rnn_cell)
+                 n_layers=1, bidirectional=False, rnn_cell='lstm', variable_lengths=False):
+        super(VanillaEncoder, self).__init__(vocab_size, max_len, hidden_size,
+                                             input_dropout_p, dropout_p, n_layers, rnn_cell)
         self.variable_lengths = variable_lengths
         self.rnn = self.rnn_cell(input_size, hidden_size, n_layers,
                                  batch_first=True, bidirectional=bidirectional, dropout=dropout_p)
@@ -451,7 +451,7 @@ class Seq2SeqActionGenerator(nn.Module):
         # )
         # self.encoder = EncoderRNN(vocab_size=input_size, max_len=max_len, hidden_size=hidden_size,
         #                      bidirectional=bidirectional, variable_lengths=input_variable_lengths)
-        self.encoder = StateEncoder(
+        self.encoder = VanillaEncoder(
             input_size=input_size, max_len=max_len, hidden_size=hidden_size, input_dropout_p=dropout_p,
             dropout_p=dropout_p, n_layers=n_layers, bidirectional=bidirectional, rnn_cell=opt.encoder,
             variable_lengths=False
@@ -521,14 +521,131 @@ class Seq2SeqActionGenerator(nn.Module):
                 return preds
 
 
+class StateEncoder(nn.Module):
+    def __init__(self, slot_num, diaact_num, embedded_v_size, state_v_component, max_len, hidden_size,
+                 vocab_size=False, input_dropout_p=0, dropout_p=0,
+                 n_layers=1, bidirectional=False, rnn_cell='lstm', variable_lengths=False, use_cuda=False):
+        super(StateEncoder, self).__init__()
+        self.variable_lengths = variable_lengths
+        self.state_v_component = state_v_component
+        self.bidirectional = bidirectional
+        self.n_layers = n_layers
+        self.n_directions = 2 if self.bidirectional else 1
+        self.embedded_v_size = hidden_size  # should be force to same with hidden size, as it imitates rnn output
+        self.use_cuda = use_cuda
+
+        self.diaact_embedding = nn.Linear(diaact_num, self.embedded_v_size)
+        # In my neural model, I actually use the union set of all possible slots
+        self.slot_embedding = nn.Linear(slot_num, self.embedded_v_size)
+        # Status has 1 dim only, -1, 0, 1 for failed, no outcome, success,
+        self.dialog_status_embedding = nn.Linear(1, self.embedded_v_size)
+
+        # h_n: (num_layers * num_directions, batch, hidden_size)
+        # c_n: (num_layers * num_directions, batch, hidden_size)
+        self.h_encoder = nn.Linear(
+            self.embedded_v_size * len(self.state_v_component),
+            hidden_size * n_layers * 2 if self.bidirectional else hidden_size * n_layers
+        )
+        self.c_encoder = nn.Linear(
+            self.embedded_v_size * len(self.state_v_component),
+            hidden_size * n_layers * 2 if self.bidirectional else hidden_size * n_layers
+        )
+        self.h_relu = nn.ReLU()
+        self.c_relu = nn.ReLU()
+
+    def forward(self, batch_x, input_lengths=None):
+        batch_size = len(batch_x)
+
+        def get_batch_component(batch, component_idx):
+            '''
+            list could not proceed multi-dim slice, so write this
+            :param batch: iterable batch
+            :param component_idx:
+            :return: torch variable
+            '''
+            tmp = []
+            for sample in batch:
+                tmp.append(sample[component_idx])
+            tmp = torch.LongTensor(tmp).cuda() if self.use_cuda else torch.LongTensor(tmp)
+            return Variable(tmp).float()
+
+        ''' Extract State Representation '''
+        if len(self.state_v_component) != 9:
+            raise RuntimeError('Wrong Component! The state v component is hard coded as here and vector2state()')
+        goal_inform_slots_v = get_batch_component(batch_x, 0)
+        goal_request_slots_v = get_batch_component(batch_x, 1)
+        history_slots_v = get_batch_component(batch_x, 2)  # informed slots, 1 informed, 0 irrelevant, -1 not informed,
+        rest_slots_v = get_batch_component(batch_x, 3)  # remained request slots, 1 for remained, 0 irrelevant, -1 for already got,
+        system_diaact_v = get_batch_component(batch_x, 4)  # system diaact,
+        system_inform_slots_v = get_batch_component(batch_x, 5)  # inform slots of sys response,
+        system_request_slots_v = get_batch_component(batch_x, 6)  # request slots of sys response,
+        consistency_v = get_batch_component(batch_x, 7)  # for each pos, -1 inconsistent, 0 irrelevent or not requested, 1 consistent,
+        dialog_status_v = get_batch_component(batch_x, 8)  # -1, 0, 1 for failed, no outcome, success,
+
+        ''' Get embeddings of state component '''
+        goal_inform_slots_embedding = self.slot_embedding(goal_inform_slots_v)
+        goal_request_slots_embedding = self.slot_embedding(goal_request_slots_v)
+        history_slots_embedding = self.slot_embedding(history_slots_v)
+        rest_slots_embedding = self.slot_embedding(rest_slots_v)
+        system_diaact_embedding = self.diaact_embedding(system_diaact_v)
+        system_inform_slots_embedding = self.slot_embedding(system_inform_slots_v)
+        system_request_slots_embedding = self.slot_embedding(system_request_slots_v)
+        consistency_embedding = self.slot_embedding(consistency_v)
+        dialog_status_embedding = self.dialog_status_embedding(dialog_status_v)
+
+        ''' Send embeddings to encoder '''
+        all_embeddings = [
+            goal_inform_slots_embedding,
+            goal_request_slots_embedding,
+            history_slots_embedding,
+            rest_slots_embedding,
+            system_diaact_embedding,
+            system_inform_slots_embedding,
+            system_request_slots_embedding,
+            consistency_embedding,
+            dialog_status_embedding
+        ]
+        concated_state = torch.cat(
+            all_embeddings,
+            1
+        )
+        h_n = self.h_relu(self.h_encoder(concated_state))
+        c_n = self.c_relu(self.c_encoder(concated_state))
+
+        ''' Split hidden state to fit LSTM output shape'''
+        # h_n: (num_layers * num_directions, batch, hidden_size)
+        # c_n: (num_layers * num_directions, batch, hidden_size)
+        h_n = h_n.view(batch_size, self.n_layers * self.n_directions, -1)
+        c_n = c_n.view(batch_size, self.n_layers * self.n_directions, -1)
+        # convert to batch second
+        h_n = torch.transpose(h_n, 0, 1)
+        c_n = torch.transpose(c_n, 0, 1)
+
+        hidden = (h_n.contiguous(), c_n.contiguous())
+
+        ''' Build output to imitate rnn'''
+        # outputs: (batch, seq_len, hidden_size * num_directions)
+        for ei in all_embeddings:
+            ei.unsqueeze_(0)  # add one extra dimension
+        output = torch.cat(all_embeddings, 0)
+        output = torch.transpose(output, 0, 1).contiguous()  # convert to batch first to fit decoder's need
+        # print(output.size(), h_n.size(), c_n.size())
+        return output, hidden
+
+
 class State2Seq(nn.Module):
-    def __init__(self, input_size, hidden_size, n_layers, tgt_vocb_size, max_len, dropout_p,
+    def __init__(self, slot_num, diaact_num, embedded_v_size, state_v_component,
+                 hidden_size, n_layers, tgt_vocb_size, max_len, dropout_p,
                  sos_id, eos_id, token2id, id2token, opt,
                  bidirectional=False, use_attention=False, input_variable_lengths=False,
                  use_cuda=False
                  ):
         super(State2Seq, self).__init__()
-        self.input_size = input_size
+        self.input_size = slot_num * 6 + diaact_num * 2 + 1
+        self.slot_num = slot_num
+        self.diaact_num = diaact_num
+        self.embedded_v_size = embedded_v_size
+        self.state_v_component = state_v_component
         self.hidden_size = hidden_size
         self.n_layers = n_layers
         self.tgt_vocb_size = tgt_vocb_size
@@ -537,16 +654,16 @@ class State2Seq(nn.Module):
         self.sos_id, self.eos_id = sos_id, eos_id
         self.token2id = token2id
         self.id2token = id2token
-        self.bidirectional = bidirectional
+        self.bidirectional = bidirectional  # bidirectional should forced to be false here
         self.use_attention = use_attention
         self.opt = opt
         self.use_cuda = use_cuda
 
-
         self.encoder = StateEncoder(
-            input_size=input_size, max_len=max_len, hidden_size=hidden_size, input_dropout_p=dropout_p,
+            slot_num=slot_num, diaact_num=diaact_num,embedded_v_size=embedded_v_size, state_v_component=state_v_component,
+            max_len=max_len, hidden_size=hidden_size, input_dropout_p=dropout_p,
             dropout_p=dropout_p, n_layers=n_layers, bidirectional=bidirectional, rnn_cell=opt.encoder,
-            variable_lengths=False
+            variable_lengths=False, use_cuda=use_cuda,
         )
         self.decoder = DecoderRNN(
             vocab_size=tgt_vocb_size, max_len=max_len, hidden_size=hidden_size * 2 if bidirectional else hidden_size,
@@ -559,12 +676,15 @@ class State2Seq(nn.Module):
             self.seq2seq.cuda()
 
     def forward(self, batch_x, batch_y=None, teacher_forcing_ratio=0, output_token=False, pad_token='<PAD>'):
-        input_var = batch_x if type(batch_x) == Variable else Variable(batch_x)
-        input_var = input_var.float()
+        # input_var = batch_x if type(batch_x) == Variable else Variable(batch_x)
+        # input_var = input_var.float()
         if batch_y is not None:
+            if type(batch_y) == list:
+                batch_y = torch.LongTensor(batch_y).cuda() if self.use_cuda else torch.LongTensor(batch_y)
             batch_y = batch_y if type(batch_y) == Variable else Variable(batch_y)
 
-        decoder_outputs, decoder_hidden, other = self.seq2seq(input_variable=input_var, target_variable=batch_y,
+        ''' input will be changed to variable by state_encoder's forward function '''
+        decoder_outputs, decoder_hidden, other = self.seq2seq(input_variable=batch_x, target_variable=batch_y,
                                                               teacher_forcing_ratio=teacher_forcing_ratio)
 
         ''' decode prediction vector as result '''
@@ -587,7 +707,10 @@ class State2Seq(nn.Module):
             # loss = nn.NLLLoss(weight=weight, size_average=size_average)
 
             for step, step_output in enumerate(decoder_outputs):
-                batch_size = batch_x.size(0)
+                try:
+                    batch_size = batch_x.size(0)
+                except AttributeError:
+                    batch_size = len(batch_x)
                 ''' Select out current step's token. EOS is not included in step_output, so + 1 step for target '''
                 pred_token_distribute_batch = step_output.contiguous().view(batch_size, -1)
                 target_token_id_v_batch = batch_y[:, step + 1]
