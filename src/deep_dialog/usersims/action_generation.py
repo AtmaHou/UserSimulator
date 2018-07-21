@@ -53,6 +53,8 @@ HARD_CODED_V_COMPONENT = [
     'dialog_status_v'  # -1, 0, 1 for failed, no outcome, success,
 ]
 
+USE_TEACHER_FORCING_LIST = ['ssg', 'seq2seq_gen', 'ssag', 'seq2seq_att_gen', 'sv2s', 'state_v2seq']
+
 debug_str = '======================= DEBUG ========================'
 
 
@@ -97,6 +99,18 @@ def get_f1(pred_tags_lst, golden_tags_lst):
     return precision, recall, f1
 
 
+def valid_value_check(pred_type, pred_value, full_dict):
+    """ to avoid the case: predict slot as diaact and vice versa."""
+    if pred_type == 'diaact':
+        return pred_value in full_dict['diaact2id']
+    elif pred_type == 'inform_slots':
+        return pred_value in full_dict['user_inform_slot2id']
+    elif pred_type == 'request_slots':
+        return pred_value in full_dict['user_request_slot2id']
+    else:
+        raise RuntimeError("Wong pred_type")
+
+
 def gen2vector(pred, id2token, full_dict):
     tokens = [id2token[int(i)] for i in pred]
     pred_dict = {
@@ -107,17 +121,20 @@ def gen2vector(pred, id2token, full_dict):
     bad_slot = ['<PAD>', '<EOS>', '<SOS>'] + pred_dict.keys()
     for ind, token in enumerate(tokens):
         if token in pred_dict and ind + 1 < len(tokens) and tokens[ind + 1] not in bad_slot:
-            pred_dict[token].append(tokens[ind + 1])
-    # print('DEBUG pred_dict', pred_dict)
+            if valid_value_check(pred_type=token, pred_value=tokens[ind + 1], full_dict=full_dict):
+                pred_dict[token].append(tokens[ind + 1])
+    # print('========= DEBUG ========== pred_dict', pred_dict)
     label = create_one_hot_v(pred_dict['diaact'], full_dict['diaact2id']) + \
         create_one_hot_v(pred_dict['inform_slots'], full_dict['user_inform_slot2id']) + \
         create_one_hot_v(pred_dict['request_slots'], full_dict['user_request_slot2id'])
     return label
 
 
-def get_f1_from_generaion(pred_tags_lst, golden_tags_lst, full_dict):
+def get_f1_from_generation(pred_tags_lst, golden_tags_lst, full_dict):
     id2token = full_dict['tgt_id2token']
+    # print('========== pred ===========')
     pred_tags_lst = [gen2vector(tags, id2token, full_dict) for tags in pred_tags_lst]
+    # print('===========  gold ============')
     golden_tags_lst = [gen2vector(tags, id2token, full_dict) for tags in golden_tags_lst]
     return get_f1(pred_tags_lst, golden_tags_lst)
 
@@ -307,8 +324,8 @@ def eval_model(model, valid_x, valid_y, full_dict, opt):
         valid_y = tmp
     else:
         valid_y = torch.cat(valid_y)  # re-form batches into one
-    if opt.select_model in ['ssg', 'seq2seq_gen', 'ssag', 'seq2seq_att_gen', 'sv2s', 'state_v2seq']:
-        precision, recall, f1 = get_f1_from_generaion(pred_tags_lst=all_preds, golden_tags_lst=valid_y, full_dict=full_dict)
+    if opt.select_model in USE_TEACHER_FORCING_LIST:
+        precision, recall, f1 = get_f1_from_generation(pred_tags_lst=all_preds, golden_tags_lst=valid_y, full_dict=full_dict)
     else:
         precision, recall, f1 = get_f1(pred_tags_lst=all_preds, golden_tags_lst=valid_y)
     return precision, recall, f1
@@ -334,8 +351,9 @@ def train_model(epoch, model, optimizer,
     for x, y in zip(train_x, train_y):
         cnt += 1
         model.zero_grad()
-        if opt.select_model in ['ssg', 'seq2seq_gen', 'ssag', 'seq2seq_att_gen']:
+        if opt.select_model in USE_TEACHER_FORCING_LIST:
             _, loss = model.forward(x, y, teacher_forcing_ratio=opt.teacher_forcing_ratio)
+            # print('----------- debug in train part ------------', opt.teacher_forcing_ratio)
         else:
             _, loss = model.forward(x, y)
         total_loss += loss.data[0]
@@ -479,7 +497,7 @@ def one_turn_classification(opt):
         classifier = MultiLableClassifyLayer(input_size=input_size, hidden_size=opt.hidden_dim, num_tags=num_tags,
                                              opt=opt, use_cuda=use_cuda)
 
-        optimizer = optim.Adam(classifier.parameters())
+        optimizer = optim.Adam(classifier.parameters(), lr=opt.lr)
 
         best_valid, test_result = -1e8, -1e8
         for epoch in range(opt.max_epoch):
@@ -553,7 +571,7 @@ def history_based_classification(opt):
             opt=opt, use_cuda=use_cuda
         )
         # classifier = LSTM_MultiLabelClassifier()
-        optimizer = optim.Adam(classifier.parameters())
+        optimizer = optim.Adam(classifier.parameters(), lr=opt.lr)
 
         best_valid, test_result = -1e8, -1e8
         for epoch in range(opt.max_epoch):
@@ -702,7 +720,7 @@ def seq2seq_action_generation(opt, single_turn_history=False):
             use_cuda=use_cuda
         )
 
-        optimizer = optim.Adam(classifier.parameters())
+        optimizer = optim.Adam(classifier.parameters(), lr=opt.lr)
 
         best_valid, test_result = -1e8, -1e8
         for epoch in range(opt.max_epoch):
@@ -795,7 +813,7 @@ def seq2seq_att_action_generation(opt, single_turn_history=False):
             use_cuda=use_cuda
         )
 
-        optimizer = optim.Adam(classifier.parameters())
+        optimizer = optim.Adam(classifier.parameters(), lr=opt.lr)
 
         best_valid, test_result = -1e8, -1e8
         for epoch in range(opt.max_epoch):
@@ -916,7 +934,7 @@ def state2seq_action_generation(opt):
             use_cuda=use_cuda
         )
 
-        optimizer = optim.Adam(classifier.parameters())
+        optimizer = optim.Adam(classifier.parameters(), lr=opt.lr)
 
         best_valid, test_result = -1e8, -1e8
         for epoch in range(opt.max_epoch):

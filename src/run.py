@@ -36,6 +36,7 @@ from deep_dialog.usersims import RuleSimulator
 from deep_dialog.usersims.usersim_supervise import SuperviseUserSimulator
 from deep_dialog.usersims.usersim_seq2seq import Seq2SeqUserSimulator
 from deep_dialog.usersims.usersim_seq2seq_att import Seq2SeqAttUserSimulator
+from deep_dialog.usersims.usersim_state2seq import State2SeqUserSimulator
 
 from deep_dialog import dialog_config
 from deep_dialog.dialog_config import *
@@ -222,6 +223,8 @@ elif usr == 3:
     user_sim = Seq2SeqUserSimulator(movie_dictionary, act_set, slot_set, goal_set, usersim_params, use_cuda=USE_CUDA)
 elif usr == 4:
     user_sim = Seq2SeqAttUserSimulator(movie_dictionary, act_set, slot_set, goal_set, usersim_params, use_cuda=USE_CUDA)
+elif usr == 5:
+    user_sim = State2SeqUserSimulator(movie_dictionary, act_set, slot_set, goal_set, usersim_params, use_cuda=USE_CUDA)
 
 ################################################################################
 #    Add your user simulator here

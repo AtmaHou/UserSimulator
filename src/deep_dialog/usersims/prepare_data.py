@@ -216,6 +216,7 @@ def create_one_hot_v(selected_set, reference):
     :return:
     """
     v = [0 for i in range(len(reference))]
+    # print('************** debug *************** create one hot v', selected_set, reference, )
     if type(reference) == list:
         for x in selected_set:
             v[reference.index(x)] = 1

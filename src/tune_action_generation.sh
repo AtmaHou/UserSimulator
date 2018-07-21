@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 echo Start tuning
-# === define paprameters ===
+# === define parameters ===
 batch_size=(32 64 128)
-hidden_dim=(64 128 256 384)
-max_epoch=(40)
+hidden_dim=(64 128 256)
+max_epoch=(30)
 dropout=(0.2 0.5 0.8)
 depth=(2 3)
-learn_rate=(0.1 0.01 0.001)
-learn_rate_decay=(0.9 0.99)
+#depth=(2 3 4)
+learn_rate=(0.01 0.001)
+learn_rate_decay=('0.9' '0.99')
 teacher_forcing_ratio=(0.2 0.5 0.8)
+#teacher_forcing_ratio=(0 0.5 1)
 
 for b_s in ${batch_size[@]}
 do
@@ -26,6 +28,13 @@ do
                         do
                             for t_f in ${teacher_forcing_ratio[@]}
                             do
+                                # to split task to different gpu
+                                gpu=1
+                                if [ ${lr_d} == '0.9' ]
+                                then
+                                    gpu=4
+                                fi
+
                                 file_mark=b_s${b_s}-h_d${h_d}-m_e${m_e}-d_o${d_o}-dep${dep}-lr${lr}-lr_d${lr_d}-t_f${t_f}
                                 echo python run_action_generation.py \
                                     -sm sv2s \
@@ -38,7 +47,7 @@ do
                                     --lr_decay ${lr_d} \
                                     --teacher_forcing_ratio ${t_f} \
                                     --model_name ${file_mark}.model.pkl \
-                                    -gpu 3
+                                    -gpu ${gpu}
                                 nohup python run_action_generation.py \
                                     -sm sv2s \
                                     --batch_size ${b_s} \
@@ -50,7 +59,8 @@ do
                                     --lr_decay ${lr_d} \
                                     --teacher_forcing_ratio ${t_f} \
                                     --model_name ${file_mark}.model.pkl \
-                                    -gpu 3 \
+                                    --use_attention \
+                                    -gpu ${gpu} \
                                     > ./tune/${file_mark}.log &
                             done
                         done
@@ -62,7 +72,6 @@ do
     done
 done
 
-
 # test wait
 #echo 1
 #nohup sleep 10&
@@ -72,3 +81,16 @@ done
 #echo 5
 #nohup sleep 5&
 #echo 6
+
+
+# test if command
+#for lr_d in ${learn_rate_decay[@]}
+#do
+#    # to split task to different gpu
+#    gpu=1
+#    if [ ${lr_d} == '0.9' ]
+#    then
+#        gpu=4
+#    fi
+#    echo ${gpu}
+#done

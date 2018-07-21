@@ -258,6 +258,7 @@ class DecoderRNN(BaseRNN):
 
         attn = None
         if self.use_attention:
+            # print('************ debug **********  use attention')
             output, attn = self.attention(output, encoder_outputs)
 
         predicted_softmax = function(self.out(output.contiguous().view(-1, self.hidden_size)), dim=1).view(batch_size, output_size, -1)
@@ -274,7 +275,7 @@ class DecoderRNN(BaseRNN):
         decoder_hidden = self._init_state(encoder_hidden)
 
         use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
-
+        # print('========== debug ========= teacher forcing_ration', teacher_forcing_ratio, use_teacher_forcing)
         decoder_outputs = []
         sequence_symbols = []
         lengths = np.array([max_length] * batch_size)
@@ -525,6 +526,23 @@ class StateEncoder(nn.Module):
     def __init__(self, slot_num, diaact_num, embedded_v_size, state_v_component, max_len, hidden_size,
                  vocab_size=False, input_dropout_p=0, dropout_p=0,
                  n_layers=1, bidirectional=False, rnn_cell='lstm', variable_lengths=False, use_cuda=False):
+        """
+
+        :param slot_num:
+        :param diaact_num:
+        :param embedded_v_size: Currently useless
+        :param state_v_component:
+        :param max_len:
+        :param hidden_size:
+        :param vocab_size:
+        :param input_dropout_p:
+        :param dropout_p:
+        :param n_layers:
+        :param bidirectional:
+        :param rnn_cell:
+        :param variable_lengths:
+        :param use_cuda:
+        """
         super(StateEncoder, self).__init__()
         self.variable_lengths = variable_lengths
         self.state_v_component = state_v_component
@@ -660,7 +678,7 @@ class State2Seq(nn.Module):
         self.use_cuda = use_cuda
 
         self.encoder = StateEncoder(
-            slot_num=slot_num, diaact_num=diaact_num,embedded_v_size=embedded_v_size, state_v_component=state_v_component,
+            slot_num=slot_num, diaact_num=diaact_num, embedded_v_size=embedded_v_size, state_v_component=state_v_component,
             max_len=max_len, hidden_size=hidden_size, input_dropout_p=dropout_p,
             dropout_p=dropout_p, n_layers=n_layers, bidirectional=bidirectional, rnn_cell=opt.encoder,
             variable_lengths=False, use_cuda=use_cuda,

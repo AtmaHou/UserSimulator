@@ -32,20 +32,23 @@ import numpy as np
 from deep_dialog import dialog_config
 
 from .usersim_rule import RuleSimulator
-from .nn_models import Seq2SeqActionGenerator
+from .nn_models import StateEncoder
 from .action_generation import *
 from .prepare_data import *
 import torch
 
 DATA_MARK = dialog_config.DATA_MARK[4]
 EXPR_DIR = dialog_config.EXPR_DIR[DATA_MARK]
+MODEL_NAME = 'b_s32-h_d64-m_e30-d_o0.2-dep2-lr0.001-lr_d0.9-t_f0.5.model.pkl'
+# MODEL_NAME = 'model.pkl'
+
 
 debug_str = '=========== debug =========='
 
 
-class Seq2SeqAttUserSimulator(RuleSimulator):
+class State2SeqUserSimulator(RuleSimulator):
     def __init__(self, movie_dict=None, act_set=None, slot_set=None, start_set=None, params=None, use_cuda=False,
-                 model_path=EXPR_DIR + 'model.pkl', dict_path=EXPR_DIR + '{0}.dict.json'.format(DATA_MARK),
+                 model_path=EXPR_DIR + MODEL_NAME, dict_path=EXPR_DIR + '{0}.dict.json'.format(DATA_MARK),
                  rule_first_turn=False):
         print('Start Seq2Seq user simulator')
         # super(SuperviseUserSimulator, self).__init__(movie_dict, act_set, slot_set, start_set, params)
@@ -68,6 +71,9 @@ class Seq2SeqAttUserSimulator(RuleSimulator):
         # new things
         self.use_cuda = use_cuda
         self.state_v_component = dialog_config.STATE_V_COMPONENT
+
+        with open(dict_path, 'r') as reader:
+            self.full_dict = json.load(reader)
         with open(model_path, 'r') as reader:
             print(debug_str, model_path)
             saved_model = torch.load(reader)
@@ -75,18 +81,29 @@ class Seq2SeqAttUserSimulator(RuleSimulator):
             param = saved_model['param']
             self.token2id = param['token2id']
             self.id2token = param['id2token']
-            self.classifier = Seq2SeqActionGenerator(
-                input_size=param['input_size'], hidden_size=param['opt'].hidden_dim, n_layers=param['opt'].depth,
+            print("DEBUG", param['opt'])
+            self.classifier = State2Seq(
+                slot_num=len(self.full_dict['user_inform_slot2id']), diaact_num=len(self.full_dict['diaact2id']),
+                embedded_v_size=None, state_v_component=HARD_CODED_V_COMPONENT,
+                hidden_size=param['opt'].hidden_dim, n_layers=param['opt'].depth,
                 tgt_vocb_size=len(self.token2id), max_len=param['opt'].max_len, dropout_p=param['opt'].dropout,
                 sos_id=param['sos_id'], eos_id=param['eos_id'],
                 token2id=self.token2id, id2token=self.id2token, opt=param['opt'],
-                bidirectional=param['opt'].direction == 'bi', use_attention=True,
+                bidirectional=False, use_attention=True,
                 input_variable_lengths=False,
                 use_cuda=use_cuda
             )
+
+            # self.classifier = Seq2SeqActionGenerator(
+            #     input_size=param['input_size'], hidden_size=param['opt'].hidden_dim, n_layers=param['opt'].depth,
+            #     tgt_vocb_size=len(self.token2id), max_len=param['opt'].max_len, dropout_p=param['opt'].dropout,
+            #     sos_id=param['sos_id'], eos_id=param['eos_id'],
+            #     token2id=self.token2id, id2token=self.id2token, opt=param['opt'],
+            #     bidirectional=param['opt'].direction == 'bi', use_attention=True,
+            #     input_variable_lengths=False,
+            #     use_cuda=use_cuda
+            # )
             self.classifier.load_state_dict(saved_model['state_dict'])
-        with open(dict_path, 'r') as reader:
-            self.full_dict = json.load(reader)
         self.state_dict = {}
         self.state_v_history = []
 
@@ -174,10 +191,8 @@ class Seq2SeqAttUserSimulator(RuleSimulator):
         return response_action
 
     def get_state_representation(self):
-        s_r = self.state_v_history[:5]
-        s_r = [s_r]  # batch size as 1
-        s_r = torch.LongTensor(s_r)
-        # print('DEBUG', self.state_v_history, '\nDEBUG s_r', s_r)
+        s_r = self.state_v_history[-1:]
+        s_r = convert_data_into_state_style(s_r, self.full_dict)  # batch size as 1
         return s_r
 
     def predict_action(self, state_representation):
