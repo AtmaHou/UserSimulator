@@ -106,12 +106,26 @@ class MultiLableClassifyLayer(nn.Module):
 
     def forward(self, input, golden=None):
         # print('DEBUG:', input, golden)
+        # print('Input:', input)
+        # if not self.training:
+        #     input = [input]
+        # print(input)
+        if not torch.is_tensor(input):
+            input = torch.LongTensor(input)
+
         input = Variable(input.float()) if type(input) != Variable else input
         if golden is not None:
+            if not torch.is_tensor(golden):
+                golden = torch.LongTensor(golden)
             golden = Variable(golden.float()) if type(golden) != Variable else golden
         pred = self.main(input)  # For each pos, > 0 for positive tag, < 0 for negative tag
         # For each pos, 1 for positive tag, 0 for negative tag
         # print('DEBUG!!!!!!!!!!', pred, pred.size())
+        # print(pred.data)
+        # for pred_i in pred.data:
+        #     print(pred_i)
+        #     for pred_j in pred_i:
+        #         print(pred_j)
         classify_results = [[int(pred_j > 0) for pred_j in pred_i] for pred_i in pred.data]
         if self.training:
             return classify_results, self.criterion(pred, golden)

@@ -76,7 +76,7 @@ class State2SeqUserSimulator(RuleSimulator):
             self.full_dict = json.load(reader)
         with open(model_path, 'r') as reader:
             print(debug_str, model_path)
-            saved_model = torch.load(reader)
+            saved_model = torch.load(reader, map_location='cpu')
             # print(saved_model.keys())
             param = saved_model['param']
             self.token2id = param['token2id']
@@ -231,7 +231,7 @@ class State2SeqUserSimulator(RuleSimulator):
                 self.dialog_status = dialog_config.FAILED_DIALOG
 
             # check constraint
-            if len(self.state_dict['inconsistent_slot']) > 0 or len(self.state_dict['inconsistent_slot']) < len(self.goal['inform_slots']):
+            if len(self.state_dict['inconsistent_slots']) > 0 or len(self.state_dict['consistent_slots']) < len(self.goal['inform_slots']):
                 self.dialog_status = dialog_config.FAILED_DIALOG
 
         else:
@@ -244,8 +244,9 @@ class State2SeqUserSimulator(RuleSimulator):
                     self.dialog_status = dialog_config.FAILED_DIALOG
                     self.episode_over = True
 
-    def next(self, system_action, rule_style=True):
+    def next(self, system_action, rule_style=False):
         if rule_style:
+            print("debug!!!!!!!!!!!!!!!!!!!! use rule!!!!!!")
             return self.rule_next(system_action)
         else:
             self.state['turn'] += 2
@@ -261,9 +262,9 @@ class State2SeqUserSimulator(RuleSimulator):
                 self.state['inform_slots'].clear()
 
             last_sys_turn = {
-                "request_slots": system_action['request_slot'],
+                "request_slots": system_action['request_slots'],
                 "diaact": system_action['diaact'],
-                "inform_slots": system_action['inform_slot'],
+                "inform_slots": system_action['inform_slots'],
                 "turn_id": self.state['turn'] - 1,
                 "speaker": "sys",
                 "utterance": '',
@@ -298,9 +299,9 @@ class State2SeqUserSimulator(RuleSimulator):
             response_action['nl'] = ""
 
             current_user_turn = {
-                "request_slots": response_action['request_slot'],
+                "request_slots": response_action['request_slots'],
                 "diaact": response_action['diaact'],
-                "inform_slots": response_action['inform_slot'],
+                "inform_slots": response_action['inform_slots'],
                 "turn_id": self.state['turn'],
                 "speaker": "usr",
                 "utterance": '',
@@ -313,6 +314,7 @@ class State2SeqUserSimulator(RuleSimulator):
 
             # add NL to dia_act
             self.add_nl_to_action(response_action)
+            # print('==== state dict ===', self.state_dict)
             return response_action, self.episode_over, self.dialog_status
 
     def rule_next(self, system_action):

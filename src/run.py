@@ -71,7 +71,7 @@ if __name__ == "__main__":
     parser.add_argument('--intent_err_prob', dest='intent_err_prob', default=0.05, type=float, help='the intent err probability')
     
     parser.add_argument('--agt', dest='agt', default=0, type=int, help='Select an agent: 0 for a command line input, 1-6 for rule based agents')
-    parser.add_argument('--usr', dest='usr', default=2, type=int, help='Select a user simulator. 0 is a Frozen user simulator. 1 Rule based, 2 Supervised User, 3 Seq2Seq User, 4 Seq2Seq_Attention User')
+    parser.add_argument('--usr', dest='usr', default=2, type=int, help='Select a user simulator. 0 is a Frozen user simulator. 1 Rule based, 2 Supervised User, 3 Seq2Seq User, 4 Seq2Seq_Attention User 5 State2Seq User')
     
     parser.add_argument('--epsilon', dest='epsilon', type=float, default=0, help='Epsilon to determine stochasticity of epsilon-greedy agent policies')
     
@@ -116,6 +116,7 @@ if __name__ == "__main__":
     torch.manual_seed(args.seed)
     random.seed(args.seed)
     if args.gpu >= 0:
+        print(args.gpu)
         torch.cuda.set_device(args.gpu)
         if args.seed > 0:
             torch.cuda.manual_seed(args.seed)
@@ -290,8 +291,8 @@ performance_records['ave_reward'] = {}
 
 
 """ Save model """
-def save_model(path, agt, success_rate, agent, best_epoch, cur_epoch):
-    filename = 'agt_%s_%s_%s_%.5f.p' % (agt, best_epoch, cur_epoch, success_rate)
+def save_model(path, agt, usr, success_rate, agent, best_epoch, cur_epoch):
+    filename = 'agt_{}_usr_{}_{}_%.5f.p'.format(agt, usr, best_epoch, cur_epoch, success_rate)
     filepath = os.path.join(path, filename)
     checkpoint = {}
     if agt == 9: checkpoint['model'] = copy.deepcopy(agent.dqn.model)
@@ -304,8 +305,8 @@ def save_model(path, agt, success_rate, agent, best_epoch, cur_epoch):
         print e
 
 """ save performance numbers """
-def save_performance_records(path, agt, records):
-    filename = 'agt_%s_performance_records.json' % (agt)
+def save_performance_records(path, agt, usr, records):
+    filename = 'agt_{}_usr_{}_performance_records.json'.format(agt, usr)
     filepath = os.path.join(path, filename)
     try:
         json.dump(records, open(filepath, "wb"))
@@ -429,8 +430,8 @@ def run_episodes(count, status):
             
             print ("Simulation success rate %s, Ave reward %s, Ave turns %s, Best success rate %s" % (performance_records['success_rate'][episode], performance_records['ave_reward'][episode], performance_records['ave_turns'][episode], best_res['success_rate']))
             if episode % save_check_point == 0 and params['trained_model_path'] == None: # save the model every 10 episodes
-                save_model(params['write_model_dir'], agt, best_res['success_rate'], best_model['model'], best_res['epoch'], episode)
-                save_performance_records(params['write_model_dir'], agt, performance_records)
+                save_model(params['write_model_dir'], agt, usr, best_res['success_rate'], best_model['model'], best_res['epoch'], episode)
+                save_performance_records(params['write_model_dir'], agt, usr, performance_records)
         
         print("Progress: %s / %s, Success rate: %s / %s Avg reward: %.2f Avg turns: %.2f" % (episode+1, count, successes, episode+1, float(cumulative_reward)/(episode+1), float(cumulative_turns)/(episode+1)))
     print("Success rate: %s / %s Avg reward: %.2f Avg turns: %.2f" % (successes, count, float(cumulative_reward)/count, float(cumulative_turns)/count))
@@ -438,7 +439,7 @@ def run_episodes(count, status):
     status['count'] += count
     
     if agt == 9 and params['trained_model_path'] == None:
-        save_model(params['write_model_dir'], agt, float(successes)/count, best_model['model'], best_res['epoch'], count)
-        save_performance_records(params['write_model_dir'], agt, performance_records)
+        save_model(params['write_model_dir'], agt, usr, float(successes)/count, best_model['model'], best_res['epoch'], count)
+        save_performance_records(params['write_model_dir'], agt, usr, performance_records)
     
 run_episodes(num_episodes, status)

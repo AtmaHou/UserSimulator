@@ -67,7 +67,7 @@ class SuperviseUserSimulator(RuleSimulator):
         self.use_cuda = use_cuda
         self.state_v_component = dialog_config.STATE_V_COMPONENT
         with open(model_path, 'r') as reader:
-            saved_model = torch.load(reader)
+            saved_model = torch.load(reader, map_location='cpu')
             # print(saved_model.keys())
             param = saved_model['param']
             print(param)
@@ -198,7 +198,7 @@ class SuperviseUserSimulator(RuleSimulator):
                 self.dialog_status = dialog_config.FAILED_DIALOG
 
             # check constraint
-            if len(self.state_dict['inconsistent_slot']) > 0 or len(self.state_dict['inconsistent_slot']) < len(self.goal['inform_slots']):
+            if len(self.state_dict['inconsistent_slots']) > 0 or len(self.state_dict['consistent_slots']) < len(self.goal['inform_slots']):
                 self.dialog_status = dialog_config.FAILED_DIALOG
 
         else:
@@ -211,7 +211,7 @@ class SuperviseUserSimulator(RuleSimulator):
                     self.dialog_status = dialog_config.FAILED_DIALOG
                     self.episode_over = True
 
-    def next(self, system_action, rule_style=True):
+    def next(self, system_action, rule_style=False):
         if rule_style:
             return self.rule_next(system_action)
         else:
@@ -228,9 +228,9 @@ class SuperviseUserSimulator(RuleSimulator):
                 self.state['inform_slots'].clear()
 
             last_sys_turn = {
-                "request_slots": system_action['request_slot'],
+                "request_slots": system_action['request_slots'],
                 "diaact": system_action['diaact'],
-                "inform_slots": system_action['inform_slot'],
+                "inform_slots": system_action['inform_slots'],
                 "turn_id": self.state['turn'] - 1,
                 "speaker": "sys",
                 "utterance": '',
@@ -241,7 +241,7 @@ class SuperviseUserSimulator(RuleSimulator):
                 current_speaker='sys', turn=last_sys_turn, user_goal=self.goal, old_state_dict=self.state_dict
             )
             # update state_dict: vector
-            state_representation, self.state_dict = update_state_dict_vector(
+            state_v, self.state_dict = update_state_dict_vector(
                 user_goal=self.goal,
                 state_v_component=self.state_v_component,
                 state_dict=self.state_dict,
@@ -253,6 +253,8 @@ class SuperviseUserSimulator(RuleSimulator):
                 diaact2id=self.full_dict['diaact2id'],
                 dialog_status=0,
             )
+            # self.state_v_history = [state_v] + self.state_v_history  # add current state to the front
+            state_representation = self.get_state_representation()
             pred_action = self.predict_action(state_representation)
             self.fill_slot_value(pred_action)
             response_action = {}
@@ -263,9 +265,9 @@ class SuperviseUserSimulator(RuleSimulator):
             response_action['nl'] = ""
 
             current_user_turn = {
-                "request_slots": response_action['request_slot'],
+                "request_slots": response_action['request_slots'],
                 "diaact": response_action['diaact'],
-                "inform_slots": response_action['inform_slot'],
+                "inform_slots": response_action['inform_slots'],
                 "turn_id": self.state['turn'],
                 "speaker": "usr",
                 "utterance": '',
@@ -277,6 +279,9 @@ class SuperviseUserSimulator(RuleSimulator):
             )
 
             # add NL to dia_act
+            # print('!!!!!!debug!', response_action)
+            if response_action['diaact'] == '':
+                response_action['diaact'] = 'inform'
             self.add_nl_to_action(response_action)
             return response_action, self.episode_over, self.dialog_status
 
