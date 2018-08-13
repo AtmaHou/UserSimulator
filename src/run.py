@@ -213,6 +213,7 @@ usersim_params['intent_err_probability'] = params['intent_err_prob']
 usersim_params['simulator_run_mode'] = params['run_mode']
 usersim_params['simulator_act_level'] = params['act_level']
 usersim_params['learning_phase'] = params['learning_phase']
+usersim_params['warm_start'] = params['warm_start']
 
 if usr == 0:# real user
     user_sim = RealUser(movie_dictionary, act_set, slot_set, goal_set, usersim_params)
@@ -292,7 +293,7 @@ performance_records['ave_reward'] = {}
 
 """ Save model """
 def save_model(path, agt, usr, success_rate, agent, best_epoch, cur_epoch):
-    filename = 'agt_{}_usr_{}_{}_%.5f.p'.format(agt, usr, best_epoch, cur_epoch, success_rate)
+    filename = 'agt_{}_usr_{}_{}_{0:.2f}.p'.format(agt, usr, best_epoch, cur_epoch, success_rate)
     filepath = os.path.join(path, filename)
     checkpoint = {}
     if agt == 9: checkpoint['model'] = copy.deepcopy(agent.dqn.model)

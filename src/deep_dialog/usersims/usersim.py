@@ -6,8 +6,9 @@ a rule-based user simulator
 
 @author: xiul, t-zalipt
 """
-
+from deep_dialog import dialog_config
 import random
+import copy
 
 
 class UserSimulator:
@@ -62,3 +63,34 @@ class UserSimulator:
             if user_nlu_res != None:
                 #user_nlu_res['diaact'] = user_action['diaact'] # or not?
                 user_action.update(user_nlu_res)
+
+    def detect_finish(self, system_action):
+        if system_action['diaact'] == 'thanks':
+
+            self.episode_over = True
+            self.dialog_status = dialog_config.SUCCESS_DIALOG
+
+            request_slot_set = copy.deepcopy(self.state['request_slots'].keys())
+            if 'ticket' in request_slot_set:
+                request_slot_set.remove('ticket')
+            rest_slot_set = copy.deepcopy(self.state_dict['rest_slots'])
+            if 'ticket' in rest_slot_set:
+                rest_slot_set.remove('ticket')
+
+            print('@@@@@@@@@@@@ debug', )
+            if len(request_slot_set) > 0 or len(rest_slot_set) > 0:
+                self.dialog_status = dialog_config.FAILED_DIALOG
+
+            # check constraint
+            if len(self.state_dict['inconsistent_slots']) > 0 or len(self.state_dict['consistent_slots']) < len(self.goal['inform_slots']):
+                self.dialog_status = dialog_config.FAILED_DIALOG
+
+        else:
+            self.episode_over = False
+            self.dialog_status = dialog_config.NO_OUTCOME_YET
+
+            # deal with no value match situation
+            for slot in system_action['inform_slots']:
+                if system_action['inform_slots'][slot] == dialog_config.NO_VALUE_MATCH:
+                    self.dialog_status = dialog_config.FAILED_DIALOG
+                    self.episode_over = True

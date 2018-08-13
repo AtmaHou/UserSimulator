@@ -50,7 +50,7 @@ class State2SeqUserSimulator(RuleSimulator):
     def __init__(self, movie_dict=None, act_set=None, slot_set=None, start_set=None, params=None, use_cuda=False,
                  model_path=EXPR_DIR + MODEL_NAME, dict_path=EXPR_DIR + '{0}.dict.json'.format(DATA_MARK),
                  rule_first_turn=False):
-        print('Start Seq2Seq user simulator')
+        print('Start State2Seq user simulator')
         # super(SuperviseUserSimulator, self).__init__(movie_dict, act_set, slot_set, start_set, params)
         self.movie_dict = movie_dict
         self.act_set = act_set
@@ -161,6 +161,7 @@ class State2SeqUserSimulator(RuleSimulator):
         if self.rule_first_turn:
             response_action = self._sample_action()
         else:
+            # print('==== state_dict init ====', self.state_dict)
             pred_action = self.predict_action(state_representation)
             self.fill_slot_value(pred_action)
             response_action = {}
@@ -186,12 +187,12 @@ class State2SeqUserSimulator(RuleSimulator):
         self.state_dict = update_state_dict_slots(
             current_speaker='usr', turn=current_user_turn, user_goal=self.goal, old_state_dict=self.state_dict
         )
-
+        # print('==== state_dict first user ====', self.state_dict)
         assert (self.episode_over != 1), ' but we just started'
         return response_action
 
     def get_state_representation(self):
-        s_r = self.state_v_history[-1:]
+        s_r = self.state_v_history[:1]  # newest state is added to the front!!
         s_r = convert_data_into_state_style(s_r, self.full_dict)  # batch size as 1
         return s_r
 
@@ -214,37 +215,8 @@ class State2SeqUserSimulator(RuleSimulator):
         self.state['inform_slots'] = inform_slots
         self.state['request_slots'] = request_slots
 
-    def detect_finish(self, system_action):
-        if system_action['diaact'] == 'thanks':
-
-            self.episode_over = True
-            self.dialog_status = dialog_config.SUCCESS_DIALOG
-
-            request_slot_set = copy.deepcopy(self.state['request_slots'].keys())
-            if 'ticket' in request_slot_set:
-                request_slot_set.remove('ticket')
-            rest_slot_set = copy.deepcopy(self.state['rest_slots'])
-            if 'ticket' in rest_slot_set:
-                rest_slot_set.remove('ticket')
-
-            if len(request_slot_set) > 0 or len(rest_slot_set) > 0:
-                self.dialog_status = dialog_config.FAILED_DIALOG
-
-            # check constraint
-            if len(self.state_dict['inconsistent_slots']) > 0 or len(self.state_dict['consistent_slots']) < len(self.goal['inform_slots']):
-                self.dialog_status = dialog_config.FAILED_DIALOG
-
-        else:
-            self.episode_over = False
-            self.dialog_status = dialog_config.NO_OUTCOME_YET
-
-            # deal with no value match situation
-            for slot in system_action['inform_slots']:
-                if system_action['inform_slots'][slot] == dialog_config.NO_VALUE_MATCH:
-                    self.dialog_status = dialog_config.FAILED_DIALOG
-                    self.episode_over = True
-
     def next(self, system_action, rule_style=False):
+        # print('==== state_dict ====', self.state_dict)
         if rule_style:
             print("debug!!!!!!!!!!!!!!!!!!!! use rule!!!!!!")
             return self.rule_next(system_action)
@@ -274,6 +246,7 @@ class State2SeqUserSimulator(RuleSimulator):
             self.state_dict = update_state_dict_slots(
                 current_speaker='sys', turn=last_sys_turn, user_goal=self.goal, old_state_dict=self.state_dict
             )
+            # print('==== state_dict after sys ====', self.state_dict)
             # update state_dict: vector
             state_v, self.state_dict = update_state_dict_vector(
                 user_goal=self.goal,
@@ -308,10 +281,11 @@ class State2SeqUserSimulator(RuleSimulator):
             }
 
             # update state_dict: informed slots
+
             self.state_dict = update_state_dict_slots(
                 current_speaker='usr', turn=current_user_turn, user_goal=self.goal, old_state_dict=self.state_dict
             )
-
+            # print('==== state_dict after user ====', self.state_dict)
             # add NL to dia_act
             self.add_nl_to_action(response_action)
             # print('==== state dict ===', self.state_dict)

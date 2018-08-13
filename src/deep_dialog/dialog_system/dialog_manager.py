@@ -59,6 +59,7 @@ class DialogManager:
         #   CALL USER TO TAKE HER TURN
         ########################################################################
         self.sys_action = self.state_tracker.dialog_history_dictionaries()[-1]
+
         self.user_action, self.episode_over, dialog_status = self.user.next(self.sys_action)
         self.reward = self.reward_function(dialog_status)
         

@@ -290,11 +290,13 @@ def update_state_dict_vector(user_goal, state_v_component, state_dict, last_sys_
 
 def update_state_dict_slots(current_speaker, turn, user_goal, old_state_dict):
     state_dict = copy.deepcopy(old_state_dict)
+    print('====== state dict BEFORE update =======', state_dict)
     if current_speaker == 'sys':
         for slot, value in turn['inform_slots'].items():
             # update rest slot
             if slot in state_dict['rest_slots']:
                 state_dict['rest_slots'].remove(slot)
+                print('!!!!!!!!!!!!!!!!!!DEBUG for remove rest slot: new', state_dict['rest_slots'], 'old', old_state_dict['rest_slots'], slot)
             # update consistent slot and inconsistent slot
             # Inconsistency should compare to inform slot,
             if slot in user_goal['inform_slots']:
@@ -313,6 +315,7 @@ def update_state_dict_slots(current_speaker, turn, user_goal, old_state_dict):
     else:
         print('ERROR: Wrong mark for speaker')
         raise RuntimeError
+    print('====== state dict AFTER update =======', state_dict)
     return state_dict
 
 
