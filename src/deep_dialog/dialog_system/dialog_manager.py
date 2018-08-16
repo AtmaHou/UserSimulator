@@ -60,7 +60,11 @@ class DialogManager:
         ########################################################################
         self.sys_action = self.state_tracker.dialog_history_dictionaries()[-1]
 
-        self.user_action, self.episode_over, dialog_status = self.user.next(self.sys_action)
+        if self.user.rulebase:
+            self.user_action, self.episode_over, dialog_status = self.user.next(self.sys_action)
+        else:
+            # use rule base method to warm start
+            self.user_action, self.episode_over, dialog_status = self.user.next(self.sys_action, (hasattr(self.agent, 'warm_start') and self.agent.warm_start == 1))
         self.reward = self.reward_function(dialog_status)
         
         ########################################################################

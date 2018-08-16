@@ -52,6 +52,7 @@ class SuperviseUserSimulator(RuleSimulator):
         self.slot_set = slot_set
         self.start_set = start_set
 
+        self.rulebase = False
         self.rule_first_turn = rule_first_turn
         self.max_turn = params['max_turn']
         self.slot_err_probability = params['slot_err_probability']
@@ -168,18 +169,6 @@ class SuperviseUserSimulator(RuleSimulator):
         output, loss = self.classifier.forward(state_representation)
         pred_action = vector2action(output[0], self.full_dict)
         return pred_action
-
-    def fill_slot_value(self, pred_action):
-        inform_slots, request_slots = {}, {}
-        for slot in pred_action['inform_slots']:
-            if slot in self.goal['inform_slots']:
-                inform_slots[slot] = self.goal['inform_slots'][slot]
-        for slot in pred_action['request_slots']:
-            request_slots[slot] = 'UNK'
-
-        self.state['diaact'] = pred_action['diaact']
-        self.state['inform_slots'] = inform_slots
-        self.state['request_slots'] = request_slots
 
     def next(self, system_action, rule_style=False):
         if rule_style:

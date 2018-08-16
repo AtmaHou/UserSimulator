@@ -63,7 +63,7 @@ if __name__ == "__main__":
     
     parser.add_argument('--cmd', dest='cmd', type=int, default=1, help='cmd')
     
-    parser.add_argument('--result_file', dest='result_file', type=str, default='./deep_dialog/checkpoints/rl_agent/11142016/noe2e/agt_9_performance_records.json', help='path to the result file')
+    parser.add_argument('--result_file', dest='result_file', type=str, default='./deep_dialog/checkpoints/rl_agent/agt_9_usr_5_performance_records.json', help='path to the result file')
     
     args = parser.parse_args()
     params = vars(args)

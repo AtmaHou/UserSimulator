@@ -106,6 +106,7 @@ if __name__ == "__main__":
     parser.add_argument('--learning_phase', dest='learning_phase', default='all', type=str, help='train/test/all; default is all')
 
     ''' Neural Simulator Parameters'''
+    parser.add_argument('-rft', '--rule_first_turn', action='store_true', help='user response first rule with rule')
     parser.add_argument('-gpu', '--gpu', default=-1, type=int, help='use id of gpu, -1 if cpu.')
     parser.add_argument('--seed', default=1, type=int, help='the random seed.')
 
@@ -214,19 +215,20 @@ usersim_params['simulator_run_mode'] = params['run_mode']
 usersim_params['simulator_act_level'] = params['act_level']
 usersim_params['learning_phase'] = params['learning_phase']
 usersim_params['warm_start'] = params['warm_start']
+usersim_params['rule_first_turn'] = params['rule_first_turn']
 
 if usr == 0:# real user
     user_sim = RealUser(movie_dictionary, act_set, slot_set, goal_set, usersim_params)
 elif usr == 1: 
     user_sim = RuleSimulator(movie_dictionary, act_set, slot_set, goal_set, usersim_params)
 elif usr == 2:
-    user_sim = SuperviseUserSimulator(movie_dictionary, act_set, slot_set, goal_set, usersim_params, use_cuda=USE_CUDA)
+    user_sim = SuperviseUserSimulator(movie_dictionary, act_set, slot_set, goal_set, usersim_params, use_cuda=USE_CUDA, rule_first_turn=params['rule_first_turn'])
 elif usr == 3:
-    user_sim = Seq2SeqUserSimulator(movie_dictionary, act_set, slot_set, goal_set, usersim_params, use_cuda=USE_CUDA)
+    user_sim = Seq2SeqUserSimulator(movie_dictionary, act_set, slot_set, goal_set, usersim_params, use_cuda=USE_CUDA, rule_first_turn=params['rule_first_turn'])
 elif usr == 4:
-    user_sim = Seq2SeqAttUserSimulator(movie_dictionary, act_set, slot_set, goal_set, usersim_params, use_cuda=USE_CUDA)
+    user_sim = Seq2SeqAttUserSimulator(movie_dictionary, act_set, slot_set, goal_set, usersim_params, use_cuda=USE_CUDA, rule_first_turn=params['rule_first_turn'])
 elif usr == 5:
-    user_sim = State2SeqUserSimulator(movie_dictionary, act_set, slot_set, goal_set, usersim_params, use_cuda=USE_CUDA)
+    user_sim = State2SeqUserSimulator(movie_dictionary, act_set, slot_set, goal_set, usersim_params, use_cuda=USE_CUDA, rule_first_turn=params['rule_first_turn'])
 
 ################################################################################
 #    Add your user simulator here
@@ -292,8 +294,8 @@ performance_records['ave_reward'] = {}
 
 
 """ Save model """
-def save_model(path, agt, usr, success_rate, agent, best_epoch, cur_epoch):
-    filename = 'agt_{}_usr_{}_{}_{0:.2f}.p'.format(agt, usr, best_epoch, cur_epoch, success_rate)
+def save_model(path, agt, usr, success_rate, agent, best_epoch, cur_epoch, hidden_size, seed, epsilon, rule_first):
+    filename = 'agt_{}_usr_{}_b-e{}_c-e{}_s-r{:.2f}_h-s{}_sd{}_epsl{}_rft{}.p'.format(agt, usr, best_epoch, cur_epoch, success_rate, hidden_size, seed, epsilon, rule_first)
     filepath = os.path.join(path, filename)
     checkpoint = {}
     if agt == 9: checkpoint['model'] = copy.deepcopy(agent.dqn.model)
@@ -306,8 +308,9 @@ def save_model(path, agt, usr, success_rate, agent, best_epoch, cur_epoch):
         print e
 
 """ save performance numbers """
-def save_performance_records(path, agt, usr, records):
-    filename = 'agt_{}_usr_{}_performance_records.json'.format(agt, usr)
+def save_performance_records(path, agt, usr, success_rate, hidden_size, seed, epsilon, rule_first, records):
+    filename = 'agt_{}_usr_{}_s-r{:.2f}_h-s{}_sd{}_epsl{}_rft{}performance_redcords.json'.format(agt, usr, success_rate, hidden_size, seed, epsilon, rule_first)
+    # filename = 'agt_{}_usr_{}_performance_records.json'.format(agt, usr)
     filepath = os.path.join(path, filename)
     try:
         json.dump(records, open(filepath, "wb"))
@@ -431,8 +434,8 @@ def run_episodes(count, status):
             
             print ("Simulation success rate %s, Ave reward %s, Ave turns %s, Best success rate %s" % (performance_records['success_rate'][episode], performance_records['ave_reward'][episode], performance_records['ave_turns'][episode], best_res['success_rate']))
             if episode % save_check_point == 0 and params['trained_model_path'] == None: # save the model every 10 episodes
-                save_model(params['write_model_dir'], agt, usr, best_res['success_rate'], best_model['model'], best_res['epoch'], episode)
-                save_performance_records(params['write_model_dir'], agt, usr, performance_records)
+                save_model(path=params['write_model_dir'], agt=agt, usr=usr, success_rate=best_res['success_rate'], agent=best_model['model'], best_epoch=best_res['epoch'], cur_epoch=episode, hidden_size=params['dqn_hidden_size'], seed=params['seed'], epsilon=params['epsilon'], rule_first=params['rule_first_turn'])
+                save_performance_records(path=params['write_model_dir'], agt=agt, usr=usr, success_rate=best_res['success_rate'], hidden_size=params['dqn_hidden_size'], seed=params['seed'], epsilon=params['epsilon'], rule_first=params['rule_first_turn'], records=performance_records)
         
         print("Progress: %s / %s, Success rate: %s / %s Avg reward: %.2f Avg turns: %.2f" % (episode+1, count, successes, episode+1, float(cumulative_reward)/(episode+1), float(cumulative_turns)/(episode+1)))
     print("Success rate: %s / %s Avg reward: %.2f Avg turns: %.2f" % (successes, count, float(cumulative_reward)/count, float(cumulative_turns)/count))
@@ -440,7 +443,7 @@ def run_episodes(count, status):
     status['count'] += count
     
     if agt == 9 and params['trained_model_path'] == None:
-        save_model(params['write_model_dir'], agt, usr, float(successes)/count, best_model['model'], best_res['epoch'], count)
-        save_performance_records(params['write_model_dir'], agt, usr, performance_records)
+        save_model(path=params['write_model_dir'], agt=agt, usr=usr, success_rate=float(successes)/count, agent=best_model['model'], best_epoch=best_res['epoch'], cur_epoch=count, hidden_size=params['dqn_hidden_size'], seed=params['seed'], epsilon=params['epsilon'], rule_first=params['rule_first_turn'])
+        save_performance_records(path=params['write_model_dir'], agt=agt, usr=usr, success_rate=float(successes)/count, hidden_size=params['dqn_hidden_size'], seed=params['seed'], epsilon=params['epsilon'], rule_first=params['rule_first_turn'], records=performance_records)
     
 run_episodes(num_episodes, status)

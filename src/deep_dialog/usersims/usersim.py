@@ -64,6 +64,8 @@ class UserSimulator:
                 #user_nlu_res['diaact'] = user_action['diaact'] # or not?
                 user_action.update(user_nlu_res)
 
+    # ========= My function =============
+
     def detect_finish(self, system_action):
         if system_action['diaact'] == 'thanks':
 
@@ -77,7 +79,7 @@ class UserSimulator:
             if 'ticket' in rest_slot_set:
                 rest_slot_set.remove('ticket')
 
-            print('@@@@@@@@@@@@ debug', )
+            # print('@@@@@@@@@@@@ debug', )
             if len(request_slot_set) > 0 or len(rest_slot_set) > 0:
                 self.dialog_status = dialog_config.FAILED_DIALOG
 
@@ -94,3 +96,15 @@ class UserSimulator:
                 if system_action['inform_slots'][slot] == dialog_config.NO_VALUE_MATCH:
                     self.dialog_status = dialog_config.FAILED_DIALOG
                     self.episode_over = True
+
+    def fill_slot_value(self, pred_action):
+        inform_slots, request_slots = {}, {}
+        for slot in pred_action['inform_slots']:
+            if slot in self.goal['inform_slots']:
+                inform_slots[slot] = self.goal['inform_slots'][slot]
+        for slot in pred_action['request_slots']:
+            request_slots[slot] = 'UNK'
+
+        self.state['diaact'] = pred_action['diaact'] if pred_action['diaact'] else 'inform'
+        self.state['inform_slots'] = inform_slots
+        self.state['request_slots'] = request_slots

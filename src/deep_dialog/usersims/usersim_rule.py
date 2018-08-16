@@ -27,7 +27,8 @@ class RuleSimulator(UserSimulator):
         self.act_set = act_set
         self.slot_set = slot_set
         self.start_set = start_set
-        
+
+        self.rulebase = True
         self.max_turn = params['max_turn']
         self.slot_err_probability = params['slot_err_probability']
         self.slot_err_mode = params['slot_err_mode']
@@ -412,7 +413,54 @@ class RuleSimulator(UserSimulator):
                             self.state['diaact'] = "request"
                     else:
                         self.state['diaact'] = "thanks" # or replies "confirm_answer"
-        
+
+    def _sample_action_more_constraint(self):
+        """ randomly sample a start action based on user goal """
+        print('!!!!!!!!!!!! debug !!!!!!!!!!! use sample action')
+        self.state['diaact'] = random.choice(dialog_config.start_dia_acts.keys())
+
+        # "sample" informed slots
+        if len(self.goal['inform_slots']) > 0:
+            known_slot = random.choice(self.goal['inform_slots'].keys())
+            self.state['inform_slots'][known_slot] = self.goal['inform_slots'][known_slot]
+
+            if 'moviename' in self.goal['inform_slots'].keys():  # 'moviename' must appear in the first user turn
+                self.state['inform_slots']['moviename'] = self.goal['inform_slots']['moviename']
+
+            if 'starttime' in self.goal['inform_slots'].keys():  # add start time to first turn to increase success rate
+                self.state['inform_slots']['starttime'] = self.goal['inform_slots']['starttime']
+
+            for slot in self.goal['inform_slots'].keys():
+                if known_slot == slot or slot == 'moviename': continue
+                self.state['rest_slots'].append(slot)
+
+        self.state['rest_slots'].extend(self.goal['request_slots'].keys())
+
+        # "sample" a requested slot
+        request_slot_set = list(self.goal['request_slots'].keys())
+        request_slot_set.remove('ticket')
+        if len(request_slot_set) > 0:
+            request_slot = random.choice(request_slot_set)
+        else:
+            request_slot = 'ticket'
+        self.state['request_slots'][request_slot] = 'UNK'
+
+        if len(self.state['request_slots']) == 0:
+            self.state['diaact'] = 'inform'
+
+        if (self.state['diaact'] in ['thanks', 'closing']):
+            self.episode_over = True  # episode_over = True
+        else:
+            self.episode_over = False  # episode_over = False
+
+        sample_action = {}
+        sample_action['diaact'] = self.state['diaact']
+        sample_action['inform_slots'] = self.state['inform_slots']
+        sample_action['request_slots'] = self.state['request_slots']
+        sample_action['turn'] = self.state['turn']
+
+        self.add_nl_to_action(sample_action)
+        return sample_action
 
 
 
