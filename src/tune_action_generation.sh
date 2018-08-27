@@ -1,15 +1,36 @@
 #!/usr/bin/env bash
+echo Tips: pass str to select model
+echo otc, one_turn_c
+echo mtc, multi_turn_c
+echo ssg, seq2seq_gen
+echo ssag, seq2seq_att_gen
+echo sv2s, state_v2seq
 echo Start tuning
+
+
+model=$1
 # === define parameters ===
-batch_size=(32 64 128)
-hidden_dim=(64 128 256)
+#batch_size=(32 64 128)
+#hidden_dim=(64 128 256)
+#max_epoch=(30)
+#dropout=(0.2 0.5 0.8)
+#depth=(2 3)
+##depth=(2 3 4)
+#learn_rate=(0.01 0.001)
+#learn_rate_decay=('0.9' '0.99')
+#teacher_forcing_ratio=(0.2 0.5 0.8)
+##teacher_forcing_ratio=(0 0.5 1)
+
+# === for single setting ===
+batch_size=(64)
+hidden_dim=(64)
 max_epoch=(30)
-dropout=(0.2 0.5 0.8)
-depth=(2 3)
+dropout=(0.2)
+depth=(2)
 #depth=(2 3 4)
-learn_rate=(0.01 0.001)
-learn_rate_decay=('0.9' '0.99')
-teacher_forcing_ratio=(0.2 0.5 0.8)
+learn_rate=(0.001)
+learn_rate_decay=(0)
+teacher_forcing_ratio=(0)
 #teacher_forcing_ratio=(0 0.5 1)
 
 for b_s in ${batch_size[@]}
@@ -35,9 +56,9 @@ do
                                     gpu=4
                                 fi
 
-                                file_mark=b_s${b_s}-h_d${h_d}-m_e${m_e}-d_o${d_o}-dep${dep}-lr${lr}-lr_d${lr_d}-t_f${t_f}
+                                file_mark=model_${model}-b_s${b_s}-h_d${h_d}-m_e${m_e}-d_o${d_o}-dep${dep}-lr${lr}-lr_d${lr_d}-t_f${t_f}
                                 echo python run_action_generation.py \
-                                    -sm sv2s \
+                                    -sm ${model} \
                                     --batch_size ${b_s} \
                                     --hidden_dim ${h_d} \
                                     --max_epoch ${m_e} \
@@ -48,8 +69,24 @@ do
                                     --teacher_forcing_ratio ${t_f} \
                                     --model_name ${file_mark}.model.pkl \
                                     -gpu ${gpu}
+                                 # === use attention ===
+#                                nohup python run_action_generation.py \
+#                                    -sm ${model} \
+#                                    --batch_size ${b_s} \
+#                                    --hidden_dim ${h_d} \
+#                                    --max_epoch ${m_e} \
+#                                    --dropout ${d_o} \
+#                                    --depth ${dep} \
+#                                    --lr ${lr} \
+#                                    --lr_decay ${lr_d} \
+#                                    --teacher_forcing_ratio ${t_f} \
+#                                    --model_name ${file_mark}.model.pkl \
+#                                    --use_attention \
+#                                    -gpu ${gpu} \
+#                                    > ./tune/${file_mark}.log &
+                                # === no attention ===
                                 nohup python run_action_generation.py \
-                                    -sm sv2s \
+                                    -sm ${model} \
                                     --batch_size ${b_s} \
                                     --hidden_dim ${h_d} \
                                     --max_epoch ${m_e} \
@@ -59,7 +96,6 @@ do
                                     --lr_decay ${lr_d} \
                                     --teacher_forcing_ratio ${t_f} \
                                     --model_name ${file_mark}.model.pkl \
-                                    --use_attention \
                                     -gpu ${gpu} \
                                     > ./tune/${file_mark}.log &
                             done

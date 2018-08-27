@@ -45,5 +45,42 @@ def collect_tune_result():
     format_output(all_results)
 
 
+def get_cross_score(file_name, log_dir):
+    with open(log_dir + file_name, 'r') as reader:
+        results = reader.read()
+        success_rate = re.findall('Progress: 500 / 500, Success rate: (.*?) Avg reward:', results)
+        reward = re.findall('Progress: 500 / 500, Success rate: .*? Avg reward: (.*?) Avg turns:', results)
+        turns = re.findall('Progress: 500 / 500, Success rate: .*? Avg reward: .*? Avg turns: (.*?)\n', results)
+
+        if not success_rate:
+            success_rate = 'N/A'
+        else:
+            success_rate = success_rate[0]
+        if not reward:
+            reward = 'N/A'
+        else:
+            reward = reward[0]
+        if not turns:
+            turns = 'N/A'
+        else:
+            turns = turns[0]
+        return [file_name, success_rate, reward, turns]
+
+
+def format_output_cross(all_result):
+    for result in all_result:
+        print(result)
+
+
+def collect_cross_eval_result():
+    log_dir = './cross_eval/'
+    all_file_name = sorted(os.listdir(log_dir))
+    all_results = []
+    for name in all_file_name:
+        all_results.append(get_cross_score(file_name=name, log_dir=log_dir))
+    format_output_cross(all_results)
+
+
 if __name__ == '__main__':
-    collect_tune_result()
+    # collect_tune_result()
+    collect_cross_eval_result()

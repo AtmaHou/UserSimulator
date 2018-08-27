@@ -171,8 +171,17 @@ class nlg:
                 counter += 1
                 sentence = sentence.replace('$'+slot+'$', '', 1)
                 continue
-            
-            sentence = sentence.replace('$'+slot+'$', slot_val, 1)
+            try:
+                sentence = sentence.replace('$'+slot+'$', slot_val, 1)
+            except UnicodeDecodeError:
+                try:
+                    slot_val = slot_val.decode('utf8')
+                    sentence = sentence.replace('$' + slot + '$', slot_val, 1)
+                except UnicodeDecodeError:
+                    slot_val = slot_val.decode('utf8')
+                    sentence = sentence.replace('$' + slot + '$', slot_val, 1)
+                except:
+                    print('ERROR: failed str: slot value', slot_val, 'sentence', sentence)
         
         if counter > 0 and counter == len(dia_act['inform_slots']):
             sentence = dialog_config.I_DO_NOT_CARE

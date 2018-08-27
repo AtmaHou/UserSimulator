@@ -42,10 +42,13 @@ EXPR_DIR = dialog_config.EXPR_DIR[DATA_MARK]
 
 debug_str = '=========== debug =========='
 
+MODEL_FILE = 'b_s64-h_d64-m_e30-d_o0.2-dep2-lr0.001-lr_d0-t_f0.model.pkl'
+# MODEL_FILE = 'model.pkl' # tf=0.5
+
 
 class Seq2SeqUserSimulator(RuleSimulator):
     def __init__(self, movie_dict=None, act_set=None, slot_set=None, start_set=None, params=None, use_cuda=False,
-                 model_path=EXPR_DIR + 'model.pkl', dict_path=EXPR_DIR + '{0}.dict.json'.format(DATA_MARK),
+                 model_path=EXPR_DIR + MODEL_FILE, dict_path=EXPR_DIR + '{0}.dict.json'.format(DATA_MARK),
                  rule_first_turn=False):
         print('Start Seq2Seq user simulator')
         # super(SuperviseUserSimulator, self).__init__(movie_dict, act_set, slot_set, start_set, params)
@@ -142,7 +145,7 @@ class Seq2SeqUserSimulator(RuleSimulator):
 
         state_representation = self.get_state_representation()
         if self.rule_first_turn:
-            response_action = self._sample_action()
+            response_action = self._sample_action_more_constraint()
         else:
             pred_action = self.predict_action(state_representation)
             self.fill_slot_value(pred_action)

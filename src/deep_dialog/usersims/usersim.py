@@ -79,7 +79,7 @@ class UserSimulator:
             if 'ticket' in rest_slot_set:
                 rest_slot_set.remove('ticket')
 
-            # print('@@@@@@@@@@@@ debug', )
+            # print('@@@@@@@@@@@@ debug detect finish', self.state_dict)
             if len(request_slot_set) > 0 or len(rest_slot_set) > 0:
                 self.dialog_status = dialog_config.FAILED_DIALOG
 

@@ -707,7 +707,7 @@ class State2Seq(nn.Module):
         if use_cuda:
             self.seq2seq.cuda()
 
-    def forward(self, batch_x, batch_y=None, teacher_forcing_ratio=0, output_token=False, pad_token='<PAD>'):
+    def forward(self, batch_x, batch_y=None, teacher_forcing_ratio=0, output_token=False, pad_token='<PAD>', visualize=False):
         # input_var = batch_x if type(batch_x) == Variable else Variable(batch_x)
         # input_var = input_var.float()
         if batch_y is not None:
@@ -716,18 +716,30 @@ class State2Seq(nn.Module):
             batch_y = batch_y if type(batch_y) == Variable else Variable(batch_y)
 
         ''' input will be changed to variable by state_encoder's forward function '''
-        decoder_outputs, decoder_hidden, other = self.seq2seq(input_variable=batch_x, target_variable=batch_y,
+        decoder_outputs, decoder_hidden, ret_dict = self.seq2seq(input_variable=batch_x, target_variable=batch_y,
                                                               teacher_forcing_ratio=teacher_forcing_ratio)
 
         ''' decode prediction vector as result '''
         pred_tokens = []
         preds = []
+        attentions = []
         for ind in range(len(batch_x)):
-            length = other['length'][ind]
-            tgt_id_seq = [other['sequence'][di][ind].data[0] for di in range(length)]
+            length = ret_dict['length'][ind]
+            tgt_id_seq = [ret_dict['sequence'][di][ind].data[0] for di in range(length)]
             tgt_seq = [self.id2token[int(tok)] for tok in tgt_id_seq]
             preds.append(tgt_id_seq)
             pred_tokens.append(tgt_seq)
+
+            ''' Visualization '''
+            attentions = ret_dict['attention_score']  # shape = output_len * batch * 1 * input_len
+            if visualize and self.use_attention and not self.training:
+                # print('Bug detect', attentions.shape, len(pred_tokens))
+                for j in range(len(tgt_seq)):
+                    # print('===', tgt_seq[j], 'BD', len(attentions), attentions[j].shape)
+                    print('===', tgt_seq[j])
+                    for k in zip(self.state_v_component, attentions[j][ind][0].tolist()):
+                        print(k)
+
         if self.training:
             '''computing loss '''
             # loss = Perplexity()

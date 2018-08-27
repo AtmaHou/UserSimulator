@@ -956,5 +956,97 @@ def state2seq_action_generation(opt):
         logging.info("test_f1: {:.6f}".format(test_result))
 
 
+def state2seq_no_att_action_generation(opt):
+    use_cuda = opt.gpu >= 0 and torch.cuda.is_available()
+    with open(opt.train_path, 'r') as train_file, \
+            open(opt.dev_path, 'r') as dev_file, \
+            open(opt.test_path, 'r') as test_file, \
+            open(opt.dict_path, 'r') as dict_file:
+        logging.info('Start loading data from:\ntrain:{}\ndev:{}\ntest:{}\ndict:{}\n'.format(
+            opt.train_path, opt.dev_path, opt.test_path, opt.dict_path
+        ))
+        train_data = json.load(train_file)
+        dev_data = json.load(dev_file)
+        test_data = json.load(test_file)
+        full_dict = json.load(dict_file)
+
+        logging.info('Finish data loading.')
+        print('Finish  data loading!!!!!!!!!!')
+
+        ''' unpack data '''
+        train_input, train_label, train_turn_id = zip(*train_data)
+        dev_input, dev_label, dev_turn_id = zip(*dev_data)
+        test_input, test_label, test_turn_id = zip(*test_data)
+
+        ''' change input to a state format of multi-vector'''
+        train_input = convert_data_into_state_style(train_input, full_dict)
+        dev_input = convert_data_into_state_style(dev_input, full_dict)
+        test_input = convert_data_into_state_style(test_input, full_dict)
+
+        ''' gen tgt dict '''
+        sos_token = '<SOS>'
+        eos_token = '<EOS>'
+        pad_token = '<PAD>'
+        tgt_token2id_dict = {}
+        tgt_id2token_dict = {}
+        for token in (
+            [pad_token, sos_token, eos_token, 'diaact', 'inform_slots', 'request_slots'] +
+            full_dict['user_inform_slot2id'].keys() +
+            full_dict['user_request_slot2id'].keys() +
+            full_dict['diaact2id'].keys()
+        ):
+            if token not in tgt_token2id_dict:
+                t_id = len(tgt_token2id_dict)
+                tgt_token2id_dict[token] = t_id
+                tgt_id2token_dict[t_id] = token
+        full_dict['tgt_token2id'] = tgt_token2id_dict
+        full_dict['tgt_id2token'] = tgt_id2token_dict
+
+        ''' convert label to sequence '''
+        train_label = transform_label_into_sequence_style(train_label, full_dict, sos_token, eos_token, pad_token)
+        dev_label = transform_label_into_sequence_style(dev_label, full_dict, sos_token, eos_token, pad_token)
+        test_label = transform_label_into_sequence_style(test_label, full_dict, sos_token, eos_token, pad_token)
+
+        ''' create batches '''
+        # input for each sample is a list, so don't change to tensor here
+        train_x, train_y = create_batches(train_input, train_label, opt.batch_size, use_cuda=use_cuda, tensor=False)
+        dev_x, dev_y = create_batches(dev_input, dev_label, opt.batch_size, use_cuda=use_cuda, tensor=False)
+        test_x, test_y = create_batches(test_input, test_label, opt.batch_size, use_cuda=use_cuda, tensor=False)
+
+        input_size = len(train_input[0][0])
+
+        classifier = State2Seq(
+            slot_num=len(full_dict['user_inform_slot2id']), diaact_num=len(full_dict['diaact2id']),
+            embedded_v_size=opt.embedded_v_size, state_v_component=HARD_CODED_V_COMPONENT,
+            hidden_size=opt.hidden_dim, n_layers=opt.depth,
+            tgt_vocb_size=len(tgt_token2id_dict), max_len=opt.max_len, dropout_p=opt.dropout,
+            sos_id=tgt_token2id_dict[sos_token], eos_id=tgt_token2id_dict[eos_token],
+            token2id=tgt_token2id_dict, id2token=tgt_id2token_dict, opt=opt,
+            bidirectional=False, use_attention=False, input_variable_lengths=False,
+            use_cuda=use_cuda
+        )
+
+        optimizer = optim.Adam(classifier.parameters(), lr=opt.lr)
+
+        best_valid, test_result = -1e8, -1e8
+        for epoch in range(opt.max_epoch):
+            best_valid, test_result = train_model(
+                epoch=epoch,
+                model=classifier,
+                optimizer=optimizer,
+                train_x=train_x, train_y=train_y,
+                valid_x=dev_x, valid_y=dev_y,
+                test_x=test_x, test_y=test_y,
+                full_dict=full_dict, best_valid=best_valid, test_f1_score=test_result
+            )
+            if opt.lr_decay > 0:
+                optimizer.param_groups[0]['lr'] *= opt.lr_decay  # there is only one group, so use index 0
+            # logging.info('Total encoder time: {:.2f}s'.format(model.eval_time / (epoch + 1)))
+            # logging.info('Total embedding time: {:.2f}s'.format(model.emb_time / (epoch + 1)))
+            # logging.info('Total classify time: {:.2f}s'.format(model.classify_time / (epoch + 1)))
+        logging.info("best_valid_f1: {:.6f}".format(best_valid))
+        logging.info("test_f1: {:.6f}".format(test_result))
+
+
 if __name__ == '__main__':
     main()

@@ -430,6 +430,12 @@ class RuleSimulator(UserSimulator):
             if 'starttime' in self.goal['inform_slots'].keys():  # add start time to first turn to increase success rate
                 self.state['inform_slots']['starttime'] = self.goal['inform_slots']['starttime']
 
+            # if 'state' in self.goal['inform_slots'].keys():  # add start time to first turn to increase success rate
+            #     self.state['inform_slots']['starttime'] = self.goal['inform_slots']['state']
+            #
+            # if 'numberofpeople' in self.goal['inform_slots'].keys():  # add start time to first turn to increase success rate
+            #     self.state['inform_slots']['starttime'] = self.goal['inform_slots']['numberofpeople']
+
             for slot in self.goal['inform_slots'].keys():
                 if known_slot == slot or slot == 'moviename': continue
                 self.state['rest_slots'].append(slot)

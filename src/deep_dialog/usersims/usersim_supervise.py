@@ -134,7 +134,7 @@ class SuperviseUserSimulator(RuleSimulator):
 
         state_representation = self.get_state_representation()
         if self.rule_first_turn:
-            response_action = self._sample_action()
+            response_action = self._sample_action_more_constraint()
         else:
             pred_action = self.predict_action(state_representation)
             self.fill_slot_value(pred_action)
