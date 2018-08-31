@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-echo HINT: Parallel testing. Pass int parameter to set simulator and its trained agent to test,
+echo HINT: Parallel testing. Pass int parameter to set trained agent to test.
 echo e.g:
 echo source eval_by_chatting.py.sh 1 2 3 4
 echo or
@@ -11,16 +11,18 @@ agt_lst=(9)
 
 agt_model_lst[0]=./deep_dialog/checkpoints/rl_agent/agt_9_usr_1_b-e329_c-e500_s-r0.80_h-s80_sd1_epsl0.01_rftFalse.p
 agt_model_lst[1]=./deep_dialog/checkpoints/rl_agent/agt_9_usr_2_b-e296_c-e500_s-r0.63_h-s80_sd1_epsl0.01.p
-agt_model_lst[2]=./deep_dialog/checkpoints/rl_agent/agt_9_usr_3_b-e456_c-e500_s-r0.58_h-s80_sd1_epsl0.01.p
+agt_model_lst[2]=./deep_dialog/checkpoints/rl_agent/agt_9_usr_3_b-e423_c-e500_s-r0.46_h-s80_sd100_epsl0.01_rftFalse.p
 agt_model_lst[3]=./deep_dialog/checkpoints/rl_agent/agt_9_usr_4_b-e435_c-e500_s-r0.48_h-s80_sd1_epsl0.p
 agt_model_lst[4]=./deep_dialog/checkpoints/rl_agent/agt_9_usr_5_b-e316_c-e500_s-r0.80_h-s80_sd1_epsl0.0.p
 
-agt_model_id_lst=(0 1 2 3 4)
+agt_model_id_lst=($1 $2 $3 $4 $5 $6) # eg, 0 1 2 3 4
+
+
 
 # === define users to use ===
 
 # 0 is a Frozen user simulator. 1 Rule based, 2 Supervised User, 3 Seq2Seq User, 4 Seq2Seq_Attention User, 5 State2Seq User
-user_lst=($1 $2 $3 $4 $5 $6)  # load from parameters, and number params could be accepted
+user_lst=(1 2 3 4 5)  # load from parameters, and number params could be accepted
 
 # === Loop for all case and run ===
 for agt in ${agt_lst[@]}
