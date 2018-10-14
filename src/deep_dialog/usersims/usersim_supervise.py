@@ -166,7 +166,7 @@ class SuperviseUserSimulator(RuleSimulator):
 
     def predict_action(self, state_representation):
         self.classifier.eval()
-        output, loss = self.classifier.forward(state_representation)
+        output = self.classifier.forward(state_representation)
         pred_action = vector2action(output[0], self.full_dict)
         return pred_action
 

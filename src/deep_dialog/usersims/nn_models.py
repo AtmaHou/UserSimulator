@@ -130,7 +130,7 @@ class MultiLableClassifyLayer(nn.Module):
         if self.training:
             return classify_results, self.criterion(pred, golden)
         else:
-            return classify_results, torch.FloatTensor([0.0])
+            return classify_results
 
 
 class LSTM_MultiLabelClassifier(nn.Module):
